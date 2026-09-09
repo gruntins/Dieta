@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <title>DIĒTA</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --card:#121821; --card2:#171f2b; --text:#f6f7f9; --muted:#9ba7b4;
+      --accent:#55d187; --warn:#f4c15d; --bad:#ff7a7a; --line:#263140; --chip:#1d2633;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+    .app{max-width:720px;margin:0 auto;padding:20px 16px 110px}
+    h1{font-size:30px;letter-spacing:.5px;margin:6px 0 4px}
+    .sub{color:var(--muted);font-size:14px;margin-bottom:18px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .between{display:flex;justify-content:space-between;gap:10px;align-items:center}
+    button,input,select{font:inherit}
+    button{border:0;border-radius:12px;padding:11px 14px;background:var(--accent);color:#07120b;font-weight:700;cursor:pointer}
+    button.secondary{background:var(--chip);color:var(--text);border:1px solid var(--line)}
+    button.danger{background:#3a1f24;color:#ffc6c6;border:1px solid #63323a}
+    input,select{width:100%;background:#0e141c;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px}
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+    .metric{background:var(--card2);padding:12px;border-radius:14px}
+    .metric .name{font-size:12px;color:var(--muted)}
+    .metric .value{font-size:20px;font-weight:800;margin-top:3px}
+    .metric .remain{font-size:11px;color:var(--muted);margin-top:2px}
+    .bar{height:8px;background:#25303d;border-radius:99px;overflow:hidden;margin-top:8px}
+    .fill{height:100%;background:var(--accent);width:0}
+    .fill.warn{background:var(--warn)} .fill.bad{background:var(--bad)}
+    .food{display:grid;grid-template-columns:1fr auto;gap:8px;padding:11px 0;border-bottom:1px solid var(--line)}
+    .food:last-child{border-bottom:0}
+    .food .meta{font-size:12px;color:var(--muted);margin-top:3px}
+    .food .kcal{font-weight:800}
+    .pill{display:inline-block;background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:8px 10px;font-size:13px}
+    .muted{color:var(--muted)}
+    .hidden{display:none}
+    .section-title{font-size:16px;font-weight:800;margin:0 0 12px}
+    .tabs{position:fixed;left:0;right:0;bottom:0;background:rgba(11,15,20,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+    .tabs .inner{max-width:720px;margin:auto;display:grid;grid-template-columns:repeat(3,1fr);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+    .tabs button{background:transparent;color:var(--muted);padding:10px 4px}
+    .tabs button.active{color:var(--accent)}
+    .small{font-size:12px}
+    .avg{display:grid;grid-template-columns:1fr auto;gap:6px;padding:8px 0;border-bottom:1px solid var(--line)}
+    @media(max-width:600px){.grid5{grid-template-columns:1fr 1fr}.grid5 .metric:last-child{grid-column:1/-1}.grid2{grid-template-columns:1fr}}
+  
+.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.quick{background:var(--chip);color:var(--text);border:1px solid var(--line);padding:12px 8px}
+.quick b{display:block;font-size:14px}.quick span{font-size:11px;color:var(--muted)}
+.scanbox{border:1px dashed var(--line);border-radius:14px;padding:12px;margin-top:12px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:12px}
+.sheet{width:min(720px,100%);max-height:90vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px}
+.status{font-size:13px;color:var(--muted);margin-top:10px}
+@media(max-width:600px){.quick-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div id="todayView">
+    <h1>DIĒTA</h1>
+    <div class="sub" id="todayLabel"></div>
+
+    <div class="card">
+      <div class="between">
+        <div>
+          <div class="section-title">Šodienas progress</div>
+          <div class="small muted">Prioritāte: kcal → OB → tauki → OH; šķiedrvielas atsevišķi</div>
+        </div>
+        <button class="secondary" onclick="resetToday()">Jauna diena</button>
+      </div>
+      <div class="grid5" id="metrics"></div>
+    </div>
+
+    <div class="card">
+      <div class="between"><div class="section-title">⚡ Quick Add</div><span class="small muted">1 pieskāriens</span></div>
+      <div class="quick-grid" id="quickGrid"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Pievienot ēdienu</div>
+      <label>Produkts</label>
+      <select id="foodSelect"></select>
+      <div style="height:10px"></div>
+      <label>Daudzums, g</label>
+      <input id="grams" type="number" inputmode="decimal" placeholder="piem. 180" />
+      <div style="height:10px"></div>
+      <div class="row">
+        <button onclick="addFood()">Pievienot</button>
+        <button class="secondary" onclick="showCustom()">Jauns produkts</button>
+        <button class="secondary" onclick="openScanner()">📷 Skenēt</button>
+      </div>
+    </div>
+
+    <div class="card hidden" id="customCard">
+      <div class="section-title">Jauns produkts</div>
+      <div class="grid2">
+        <div><label>Nosaukums</label><input id="cName" placeholder="piem. Jogurts" /></div>
+        <div><label>kcal / 100 g</label><input id="cKcal" type="number" step="0.1" /></div>
+        <div><label>OB / 100 g</label><input id="cP" type="number" step="0.1" /></div>
+        <div><label>T / 100 g</label><input id="cF" type="number" step="0.1" /></div>
+        <div><label>OH / 100 g</label><input id="cC" type="number" step="0.1" /></div>
+        <div><label>Šķ. / 100 g</label><input id="cFi" type="number" step="0.1" value="0" /></div>
+      </div>
+      <div style="height:10px"></div>
+      <button onclick="saveCustom()">Saglabāt produktu</button>
+    </div>
+
+    <div class="card">
+      <div class="between"><div class="section-title">Šodienas ēdieni</div><div class="pill" id="countPill">0 ieraksti</div></div>
+      <div id="foodList"><div class="muted">Vēl nekas nav pievienots.</div></div>
+    </div>
+  </div>
+
+  <div id="weekView" class="hidden">
+    <h1>7 dienas</h1>
+    <div class="sub">Vidējie rādītāji no saglabātajām dienām</div>
+    <div class="card" id="weekCard"></div>
+  </div>
+
+  <div id="settingsView" class="hidden">
+    <h1>Iestatījumi</h1>
+    <div class="sub">Personīgie dienas mērķi</div>
+    <div class="card">
+      <div class="grid2">
+        <div><label>Kalorijas</label><input id="tKcal" type="number"></div>
+        <div><label>Proteīns, g</label><input id="tP" type="number"></div>
+        <div><label>Tauki, g</label><input id="tF" type="number"></div>
+        <div><label>OH orientieris, g</label><input id="tC" type="number"></div>
+        <div><label>Šķiedrvielas, g</label><input id="tFi" type="number"></div>
+      </div>
+      <div style="height:10px"></div>
+      <button onclick="saveTargets()">Saglabāt mērķus</button>
+    </div>
+    <div class="card">
+      <div class="section-title">Dati</div>
+      <button class="danger" onclick="clearAll()">Dzēst visus lokālos datus</button>
+      <div class="small muted" style="margin-top:10px">Dati glabājas tikai šajā pārlūkā / ierīcē.</div>
+    </div>
+  </div>
+</div>
+
+
+<div id="scannerModal" class="modal hidden">
+  <div class="sheet">
+    <div class="between">
+      <div><div class="section-title">📷 Produkta skenēšana</div><div class="small muted">Svītrkods vai uzturvērtības etiķete</div></div>
+      <button class="secondary" onclick="closeScanner()">Aizvērt</button>
+    </div>
+
+    <div class="scanbox">
+      <b>Svītrkods</b>
+      <div class="small muted" style="margin:6px 0 10px">Noskenē EAN/UPC. Produkts tiek meklēts Open Food Facts.</div>
+      <div id="reader"></div>
+      <button onclick="startBarcode()">Sākt svītrkoda kameru</button>
+      <div id="barcodeStatus" class="status"></div>
+    </div>
+
+    <div class="scanbox">
+      <b>Uzturvērtības etiķete</b>
+      <div class="small muted" style="margin:6px 0 10px">Nofotografē tabulu “uz 100 g”. OCR var kļūdīties, tāpēc pārbaudi ciparus.</div>
+      <input id="labelImage" type="file" accept="image/*" capture="environment">
+      <div style="height:10px"></div>
+      <button onclick="scanLabel()">Nolasīt etiķeti</button>
+      <div id="ocrStatus" class="status"></div>
+    </div>
+
+    <div id="scanResult" class="scanbox hidden">
+      <b>Atrastās vērtības / 100 g</b>
+      <div class="grid2" style="margin-top:10px">
+        <div><label>Nosaukums</label><input id="sName"></div>
+        <div><label>kcal</label><input id="sKcal" type="number" step="0.1"></div>
+        <div><label>OB</label><input id="sP" type="number" step="0.1"></div>
+        <div><label>Tauki</label><input id="sF" type="number" step="0.1"></div>
+        <div><label>OH</label><input id="sC" type="number" step="0.1"></div>
+        <div><label>Šķiedrvielas</label><input id="sFi" type="number" step="0.1"></div>
+      </div>
+      <div style="height:10px"></div>
+      <label>Daudzums, g</label><input id="sGrams" type="number" value="100">
+      <div style="height:10px"></div>
+      <button onclick="saveScanned(true)">Saglabāt + pievienot dienai</button>
+      <button class="secondary" onclick="saveScanned(false)">Tikai saglabāt</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<div class="tabs">
+  <div class="inner">
+    <button id="tabToday" class="active" onclick="showTab('today')">Šodien</button>
+    <button id="tabWeek" onclick="showTab('week')">7 dienas</button>
+    <button id="tabSettings" onclick="showTab('settings')">Iestatījumi</button>
+  </div>
+</div>
+
+<script>
+const defaultTargets={kcal:2100,p:156,f:47,c:263,fi:30};
+const baseFoods=[
+  {id:'buckwheat',name:'Griķi (sausi)',kcal:343.2,p:13.28,f:3.44,c:71.52,fi:10},
+  {id:'rice',name:'Rīsi (sausi)',kcal:348.8,p:7.2,f:1.28,c:76.48,fi:1.28},
+  {id:'ricecakes',name:'Rīsu galetes',kcal:393,p:9.55,f:4.18,c:79,fi:3.64},
+  {id:'b05',name:'B 0.5%',kcal:92,p:20,f:0.5,c:2,fi:0},
+  {id:'sweetcurd',name:'Saldais biezpiens',kcal:189,p:6.9,f:6.9,c:25,fi:0},
+  {id:'egg',name:'Vārīta ola (1 gab. ≈ 50 g)',kcal:140,p:12,f:10,c:1,fi:0},
+  {id:'eggwhite',name:'Olas baltums (1 gab. ≈ 33 g)',kcal:51.5,p:10.9,f:0,c:0.76,fi:0},
+  {id:'banana',name:'Banāns',kcal:89,p:1.1,f:0.3,c:22.8,fi:2.6},
+  {id:'honey',name:'Medus',kcal:304,p:0,f:0,c:82,fi:0},
+  {id:'vg',name:'VG',kcal:220,p:23,f:13.55,c:2,fi:0},
+  {id:'chicken',name:'Vistas fileja cepta',kcal:165,p:31,f:3.6,c:0,fi:0},
+  {id:'beef',name:'Liellopa maltā gaļa',kcal:199,p:17,f:14.5,c:0,fi:0},
+  {id:'steak',name:'Bostonas steiks',kcal:169,p:18,f:15,c:1.7,fi:0},
+  {id:'mixedmince',name:'Jauktā maltā gaļa',kcal:211,p:15.7,f:16,c:0,fi:0},
+  {id:'waffles',name:'Vafeles ADUGS',kcal:541,p:4.6,f:31.3,c:60.2,fi:2},
+  {id:'buttermilk',name:'Annele paniņas',kcal:58,p:3,f:0.4,c:9.6,fi:0}
+];
+
+function keyDate(d=new Date()){return d.toISOString().slice(0,10)}
+function getTargets(){return JSON.parse(localStorage.getItem('targets')||JSON.stringify(defaultTargets))}
+function getFoods(){return [...baseFoods,...JSON.parse(localStorage.getItem('customFoods')||'[]')]}
+function getDay(){return JSON.parse(localStorage.getItem('day_'+keyDate())||'[]')}
+function saveDay(x){localStorage.setItem('day_'+keyDate(),JSON.stringify(x))}
+function round1(x){return Math.round(x*10)/10}
+
+function renderFoodSelect(){
+  const s=document.getElementById('foodSelect'); s.innerHTML='';
+  getFoods().forEach(f=>{const o=document.createElement('option');o.value=f.id;o.textContent=f.name;s.appendChild(o)})
+}
+function totals(day=getDay()){
+  return day.reduce((a,x)=>({kcal:a.kcal+x.kcal,p:a.p+x.p,f:a.f+x.f,c:a.c+x.c,fi:a.fi+x.fi}),{kcal:0,p:0,f:0,c:0,fi:0})
+}
+function metricCard(name,val,target,unit){
+  const pct=target?val/target*100:0;
+  let cls=pct>100?'bad':pct>70?'':'warn';
+  let remain=target-val;
+  let remtxt=remain>=0?`paliek ${round1(remain)} ${unit}`:`+${round1(-remain)} ${unit}`;
+  return `<div class="metric"><div class="name">${name}</div><div class="value">${round1(val)} / ${target}</div><div class="remain">${remtxt} · ${Math.round(pct)}%</div><div class="bar"><div class="fill ${cls}" style="width:${Math.min(pct,100)}%"></div></div></div>`
+}
+function render(){
+  document.getElementById('todayLabel').textContent=new Date().toLocaleDateString('lv-LV',{weekday:'long',day:'numeric',month:'long'});
+  const day=getDay(), t=totals(day), g=getTargets();
+  document.getElementById('metrics').innerHTML=
+    metricCard('🔥 kcal',t.kcal,g.kcal,'kcal')+
+    metricCard('🥩 OB',t.p,g.p,'g')+
+    metricCard('🥑 Tauki',t.f,g.f,'g')+
+    metricCard('🍚 OH',t.c,g.c,'g')+
+    metricCard('🌿 Šķ.',t.fi,g.fi,'g');
+  document.getElementById('countPill').textContent=`${day.length} ieraksti`;
+  const list=document.getElementById('foodList');
+  if(!day.length){list.innerHTML='<div class="muted">Vēl nekas nav pievienots.</div>'}
+  else{
+    list.innerHTML=day.map((x,i)=>`<div class="food"><div><b>${x.name}</b><div class="meta">${x.grams} g · OB ${round1(x.p)} · T ${round1(x.f)} · OH ${round1(x.c)} · Šķ. ${round1(x.fi)}</div></div><div><div class="kcal">${Math.round(x.kcal)} kcal</div><button class="secondary small" onclick="removeFood(${i})">Dzēst</button></div></div>`).join('')
+  }
+  renderWeek(); loadTargetInputs();
+}
+function addFood(){
+  const id=document.getElementById('foodSelect').value, grams=parseFloat(document.getElementById('grams').value);
+  if(!grams||grams<=0)return;
+  const f=getFoods().find(x=>x.id===id), m=grams/100;
+  const day=getDay();
+  day.push({name:f.name,grams,kcal:f.kcal*m,p:f.p*m,f:f.f*m,c:f.c*m,fi:f.fi*m});
+  saveDay(day); document.getElementById('grams').value=''; render();
+}
+function removeFood(i){const d=getDay();d.splice(i,1);saveDay(d);render()}
+function showCustom(){document.getElementById('customCard').classList.toggle('hidden')}
+function saveCustom(){
+  const name=cName.value.trim(); if(!name)return;
+  const cf=JSON.parse(localStorage.getItem('customFoods')||'[]');
+  cf.push({id:'c_'+Date.now(),name,kcal:+cKcal.value||0,p:+cP.value||0,f:+cF.value||0,c:+cC.value||0,fi:+cFi.value||0});
+  localStorage.setItem('customFoods',JSON.stringify(cf));
+  ['cName','cKcal','cP','cF','cC'].forEach(id=>document.getElementById(id).value=''); cFi.value=0;
+  renderFoodSelect(); document.getElementById('customCard').classList.add('hidden');
+}
+function resetToday(){if(confirm('Dzēst visus šodienas ierakstus?')){saveDay([]);render()}}
+function loadTargetInputs(){const t=getTargets();tKcal.value=t.kcal;tP.value=t.p;tF.value=t.f;tC.value=t.c;tFi.value=t.fi}
+function saveTargets(){
+  const t={kcal:+tKcal.value,p:+tP.value,f:+tF.value,c:+tC.value,fi:+tFi.value};
+  localStorage.setItem('targets',JSON.stringify(t));render();alert('Mērķi saglabāti')
+}
+function renderWeek(){
+  const g=getTargets(); let rows=[];
+  for(let i=0;i<7;i++){let d=new Date();d.setDate(d.getDate()-i);let k='day_'+keyDate(d);let arr=JSON.parse(localStorage.getItem(k)||'[]'); if(arr.length)rows.push({date:keyDate(d),...totals(arr)})}
+  const box=document.getElementById('weekCard');
+  if(!rows.length){box.innerHTML='<div class="muted">Nav saglabātu dienu.</div>';return}
+  const a=rows.reduce((x,r)=>({kcal:x.kcal+r.kcal,p:x.p+r.p,f:x.f+r.f,c:x.c+r.c,fi:x.fi+r.fi}),{kcal:0,p:0,f:0,c:0,fi:0});
+  Object.keys(a).forEach(k=>a[k]/=rows.length);
+  box.innerHTML=`<div class="section-title">Vidēji (${rows.length} dienas)</div>
+  <div class="avg"><span>🔥 Kalorijas</span><b>${Math.round(a.kcal)} / ${g.kcal}</b></div>
+  <div class="avg"><span>🥩 OB</span><b>${round1(a.p)} / ${g.p} g</b></div>
+  <div class="avg"><span>🥑 Tauki</span><b>${round1(a.f)} / ${g.f} g</b></div>
+  <div class="avg"><span>🍚 OH</span><b>${round1(a.c)} / ${g.c} g</b></div>
+  <div class="avg"><span>🌿 Šķiedrvielas</span><b>${round1(a.fi)} / ${g.fi} g</b></div>
+  <div class="small muted" style="margin-top:12px">Dati tiek rēķināti tikai no dienām, kurās ir vismaz viens ieraksts.</div>`;
+}
+function showTab(tab){
+  ['today','week','settings'].forEach(x=>{
+    document.getElementById(x+'View').classList.toggle('hidden',x!==tab);
+    document.getElementById('tab'+x[0].toUpperCase()+x.slice(1)).classList.toggle('active',x===tab)
+  });
+  if(tab==='week')renderWeek()
+}
+function clearAll(){if(confirm('Tiešām dzēst VISUS aplikācijas datus?')){localStorage.clear();location.reload()}}
+
+const quickAdds=[
+  {id:'b05',g:180,label:'B 0.5%'},
+  {id:'buckwheat',g:125,label:'Griķi'},
+  {id:'rice',g:125,label:'Rīsi'},
+  {id:'egg',g:250,label:'5 olas'},
+  {id:'ricecakes',g:110,label:'Galetes'},
+  {id:'banana',g:100,label:'Banāns'}
+];
+function renderQuick(){
+  const foods=getFoods();
+  quickGrid.innerHTML=quickAdds.map((q,i)=>{
+    const f=foods.find(x=>x.id===q.id); if(!f)return '';
+    return `<button class="quick" onclick="quickAdd(${i})"><b>${q.label}</b><span>${q.g} g · ${Math.round(f.kcal*q.g/100)} kcal</span></button>`;
+  }).join('');
+}
+function quickAdd(i){
+  const q=quickAdds[i], f=getFoods().find(x=>x.id===q.id), m=q.g/100, day=getDay();
+  day.push({name:q.label,grams:q.g,kcal:f.kcal*m,p:f.p*m,f:f.f*m,c:f.c*m,fi:f.fi*m});
+  saveDay(day); render();
+}
+let qrScanner=null;
+function openScanner(){scannerModal.classList.remove('hidden')}
+async function closeScanner(){
+  try{if(qrScanner)await qrScanner.stop()}catch(e){}
+  qrScanner=null; scannerModal.classList.add('hidden');
+}
+async function startBarcode(){
+  barcodeStatus.textContent='Atļauj kameru un turi svītrkodu kadrā.';
+  try{
+    qrScanner=new Html5Qrcode('reader');
+    await qrScanner.start({facingMode:'environment'},{fps:10,qrbox:{width:280,height:140}},
+      async code=>{
+        await qrScanner.stop(); qrScanner=null;
+        barcodeStatus.textContent='Meklēju produktu…';
+        try{
+          const r=await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json`);
+          const j=await r.json(); if(j.status!==1)throw new Error('Produkts nav atrasts');
+          const x=j.product||{}, n=x.nutriments||{};
+          fillScan(x.product_name||x.brands||'Skenēts produkts',
+            n['energy-kcal_100g']||(n.energy_100g?n.energy_100g/4.184:0),
+            n.proteins_100g||0,n.fat_100g||0,n.carbohydrates_100g||0,n.fiber_100g||0);
+          barcodeStatus.textContent='Atrasts — pārbaudi vērtības.';
+        }catch(e){barcodeStatus.textContent='Neizdevās atrast: '+e.message}
+      },()=>{});
+  }catch(e){barcodeStatus.textContent='Kameru neizdevās palaist: '+e.message}
+}
+function numAfter(text,labels){
+  const s=text.replace(/,/g,'.').replace(/\s+/g,' ');
+  for(const l of labels){const m=s.match(new RegExp(l+'[^0-9]{0,25}([0-9]{1,4}(?:\\.[0-9]{1,2})?)','i'));if(m)return +m[1]}
+  return 0;
+}
+async function scanLabel(){
+  const file=labelImage.files[0]; if(!file){ocrStatus.textContent='Vispirms nofotografē etiķeti.';return}
+  ocrStatus.textContent='Nolasu tekstu…';
+  try{
+    const r=await Tesseract.recognize(file,'eng'), t=r.data.text||'';
+    const kcal=(t.replace(/,/g,'.').match(/([0-9]{2,4})\s*kcal/i)||[])[1]||0;
+    fillScan('Skenēts produkts',+kcal,
+      numAfter(t,['protein','olbaltumvielas','proteins']),
+      numAfter(t,['fat','tauki']),
+      numAfter(t,['carbohydrate(?:s)?','ogļhidrāti','oglhidrati']),
+      numAfter(t,['fibre','fiber','šķiedrvielas','skiedrvielas']));
+    ocrStatus.textContent='Nolasīts — pārbaudi ciparus pret etiķeti.';
+  }catch(e){ocrStatus.textContent='OCR kļūda: '+e.message}
+}
+function fillScan(name,kcal,p,f,c,fi){
+  sName.value=name;sKcal.value=round1(kcal);sP.value=round1(p);sF.value=round1(f);sC.value=round1(c);sFi.value=round1(fi);
+  scanResult.classList.remove('hidden');
+}
+function saveScanned(addToday){
+  const f={id:'c_'+Date.now(),name:sName.value||'Skenēts produkts',kcal:+sKcal.value||0,p:+sP.value||0,f:+sF.value||0,c:+sC.value||0,fi:+sFi.value||0};
+  const cf=JSON.parse(localStorage.getItem('customFoods')||'[]');cf.push(f);localStorage.setItem('customFoods',JSON.stringify(cf));
+  if(addToday){const g=+sGrams.value||100,m=g/100,d=getDay();d.push({name:f.name,grams:g,kcal:f.kcal*m,p:f.p*m,f:f.f*m,c:f.c*m,fi:f.fi*m});saveDay(d)}
+  renderFoodSelect();render();closeScanner();
+}
+const oldRender=render;
+render=function(){oldRender();renderQuick()};
+
+renderFoodSelect(); render();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+</script>
+</body>
+</html>
