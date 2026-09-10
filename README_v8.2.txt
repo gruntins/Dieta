@@ -9,3 +9,18 @@ Jaunumi:
 - BMI kalkulators.
 - Iespēja ar vienu pogu uzlikt aprēķinātos makro kā dienas mērķus.
 - Saglabātas visas v8 Visual funkcijas un dati.
+
+Labojums v8.2.1 — pilns tumšais režīms:
+- Tumši foni visām kartītēm, laukiem un paziņojumiem.
+- Salasāmi meklēšanas rezultāti, navigācija, pogas un grafika uzraksti.
+- Tēma ieslēdzas pirms lapas pirmās parādīšanas.
+- Atjaunināta bezsaistes kešatmiņas versija.
+
+GitHub augšupielādē visus ZIP failus esošā projekta vietā, arī sw.js.
+Pēc publicēšanas aizver un atver aplikāciju no jauna. Datus dzēst nevajag.
+
+Labojums v8.2.2 — sadaļu pārslēgšana ar pirksta vilcienu:
+- Velc pa kreisi nākamajai sadaļai, pa labi iepriekšējai.
+- Darbojas arī apakšējās sadaļu pogas.
+- Ievades lauki, atvērtie logi un svara grafika ritināšana netiek pārņemta.
+- Ekrāna pašas malas paliek pārlūka navigācijai.
