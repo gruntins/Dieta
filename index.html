@@ -44,11 +44,30 @@
     .hidden{display:none!important}
     .section-title{font-size:16px;font-weight:800;margin:0 0 12px}
     .tabs{position:fixed;left:0;right:0;bottom:0;background:rgba(11,15,20,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
-    .tabs .inner{max-width:720px;margin:auto;display:grid;grid-template-columns:repeat(3,1fr);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+    .tabs .inner{max-width:720px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
     .tabs button{background:transparent;color:var(--muted);padding:10px 4px}
     .tabs button.active{color:var(--accent)}
     .small{font-size:12px}
     .avg{display:grid;grid-template-columns:1fr auto;gap:6px;padding:8px 0;border-bottom:1px solid var(--line)}
+.calendar-nav{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;margin-bottom:12px}
+.calendar-title{text-align:center;font-weight:800}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-head{text-align:center;color:var(--muted);font-size:11px;padding:5px 0}
+.cal-day{min-height:48px;padding:6px 3px;border-radius:10px;background:var(--chip);border:1px solid var(--line);color:var(--text);text-align:center;font-weight:700}
+.cal-day.empty{visibility:hidden}
+.cal-day.today{border-color:var(--accent)}
+.cal-day.hasdata::after{content:'•';display:block;color:var(--accent);font-size:14px;line-height:8px}
+.cal-day.selected{background:var(--accent);color:#07120b}
+.history-row{padding:11px 0;border-bottom:1px solid var(--line)}
+.history-row:last-child{border-bottom:0}
+.history-stats{font-size:12px;color:var(--muted);margin-top:4px}
+.suggest-main{font-size:19px;font-weight:800;margin-bottom:6px}
+.suggest-option{padding:12px 0;border-bottom:1px solid var(--line)}
+.suggest-option:last-child{border-bottom:0}
+.suggest-foods{font-weight:800}
+.food-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:6px}
+.food-actions button{padding:7px 10px}
+.notice{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px;font-size:13px}
     @media(max-width:600px){.grid5{grid-template-columns:1fr 1fr}.grid5 .metric:last-child{grid-column:1/-1}.grid2{grid-template-columns:1fr}}
   
 .quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -113,6 +132,18 @@
       <button onclick="saveCustom()">Saglabāt produktu</button>
     </div>
 
+
+    <div class="card">
+      <div class="between">
+        <div>
+          <div class="section-title">🤖 Ko man vēl apēst?</div>
+          <div class="small muted">Ieteikumi no tavas produktu datubāzes pēc atlikušajām kcal un makro.</div>
+        </div>
+        <button class="secondary small" onclick="renderSuggestions()">Pārrēķināt</button>
+      </div>
+      <div id="suggestions"></div>
+    </div>
+
     <div class="card">
       <div class="between"><div class="section-title">Šodienas ēdieni</div><div class="pill" id="countPill">0 ieraksti</div></div>
       <div id="foodList"><div class="muted">Vēl nekas nav pievienots.</div></div>
@@ -123,6 +154,30 @@
     <h1>7 dienas</h1>
     <div class="sub">Vidējie rādītāji no saglabātajām dienām</div>
     <div class="card" id="weekCard"></div>
+  </div>
+
+
+  <div id="historyView" class="hidden">
+    <h1>Vēsture</h1>
+    <div class="sub">Izvēlies dienu un apskati vai labo ierakstus.</div>
+
+    <div class="card">
+      <div class="calendar-nav">
+        <button class="secondary" onclick="changeMonth(-1)">‹</button>
+        <div class="calendar-title" id="calendarTitle"></div>
+        <button class="secondary" onclick="changeMonth(1)">›</button>
+      </div>
+      <div class="calendar" id="calendar"></div>
+    </div>
+
+    <div class="card">
+      <div class="between">
+        <div class="section-title" id="historyDayTitle">Izvēlētā diena</div>
+        <div class="pill" id="historyCount">0 ieraksti</div>
+      </div>
+      <div id="historyMetrics" class="grid5" style="margin-bottom:12px"></div>
+      <div id="historyList"><div class="muted">Izvēlies dienu kalendārā.</div></div>
+    </div>
   </div>
 
   <div id="settingsView" class="hidden">
@@ -148,6 +203,27 @@
 </div>
 
 
+
+
+<div id="editFoodModal" class="modal hidden">
+  <div class="sheet">
+    <div class="between">
+      <div>
+        <div class="section-title">✏️ Labot ierakstu</div>
+        <div class="small muted" id="editFoodName"></div>
+      </div>
+      <button class="secondary" onclick="closeEditFood()">Aizvērt</button>
+    </div>
+    <div style="margin-top:14px">
+      <label>Daudzums, g</label>
+      <input id="editFoodGrams" type="number" inputmode="decimal" step="0.1">
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button onclick="saveEditedFood()">Saglabāt</button>
+      <button class="danger" onclick="deleteEditedFood()">Dzēst</button>
+    </div>
+  </div>
+</div>
 
 <div id="favoritesModal" class="modal hidden">
   <div class="sheet">
@@ -215,6 +291,7 @@
   <div class="inner">
     <button id="tabToday" class="active" onclick="showTab('today')">Šodien</button>
     <button id="tabWeek" onclick="showTab('week')">7 dienas</button>
+    <button id="tabHistory" onclick="showTab('history')">Vēsture</button>
     <button id="tabSettings" onclick="showTab('settings')">Iestatījumi</button>
   </div>
 </div>
@@ -243,8 +320,8 @@ const baseFoods=[
 function keyDate(d=new Date()){return d.toISOString().slice(0,10)}
 function getTargets(){return JSON.parse(localStorage.getItem('targets')||JSON.stringify(defaultTargets))}
 function getFoods(){return [...baseFoods,...JSON.parse(localStorage.getItem('customFoods')||'[]')]}
-function getDay(){return JSON.parse(localStorage.getItem('day_'+keyDate())||'[]')}
-function saveDay(x){localStorage.setItem('day_'+keyDate(),JSON.stringify(x))}
+function getDay(dateKey=keyDate()){return JSON.parse(localStorage.getItem('day_'+dateKey)||'[]')}
+function saveDay(x,dateKey=keyDate()){localStorage.setItem('day_'+dateKey,JSON.stringify(x))}
 function round1(x){return Math.round(x*10)/10}
 
 function renderFoodSelect(){
@@ -274,9 +351,9 @@ function render(){
   const list=document.getElementById('foodList');
   if(!day.length){list.innerHTML='<div class="muted">Vēl nekas nav pievienots.</div>'}
   else{
-    list.innerHTML=day.map((x,i)=>`<div class="food"><div><b>${x.name}</b><div class="meta">${x.grams} g · OB ${round1(x.p)} · T ${round1(x.f)} · OH ${round1(x.c)} · Šķ. ${round1(x.fi)}</div></div><div><div class="kcal">${Math.round(x.kcal)} kcal</div><button class="secondary small" onclick="removeFood(${i})">Dzēst</button></div></div>`).join('')
+    list.innerHTML=day.map((x,i)=>`<div class="food"><div><b>${x.name}</b><div class="meta">${x.grams} g · OB ${round1(x.p)} · T ${round1(x.f)} · OH ${round1(x.c)} · Šķ. ${round1(x.fi)}</div></div><div><div class="kcal">${Math.round(x.kcal)} kcal</div><div class="food-actions"><button class="secondary small" onclick="openEditFood('${keyDate()}',${i})">Labot</button><button class="secondary small" onclick="removeFood(${i})">Dzēst</button></div></div></div>`).join('')
   }
-  renderWeek(); loadTargetInputs();
+  renderWeek(); loadTargetInputs(); renderSuggestions();
 }
 function addFood(){
   const id=document.getElementById('foodSelect').value, grams=parseFloat(document.getElementById('grams').value);
@@ -318,13 +395,233 @@ function renderWeek(){
   <div class="small muted" style="margin-top:12px">Dati tiek rēķināti tikai no dienām, kurās ir vismaz viens ieraksts.</div>`;
 }
 function showTab(tab){
-  ['today','week','settings'].forEach(x=>{
+  ['today','week','history','settings'].forEach(x=>{
     document.getElementById(x+'View').classList.toggle('hidden',x!==tab);
     document.getElementById('tab'+x[0].toUpperCase()+x.slice(1)).classList.toggle('active',x===tab)
   });
-  if(tab==='week')renderWeek()
+  if(tab==='week')renderWeek();
+  if(tab==='history'){renderCalendar();renderHistoryDay(selectedHistoryDate)}
 }
 function clearAll(){if(confirm('Tiešām dzēst VISUS aplikācijas datus?')){localStorage.clear();location.reload()}}
+
+
+// ===== DIĒTA v4: rediģēšana, vēsture, gudrie ieteikumi =====
+let editContext={date:keyDate(),index:-1};
+let calendarCursor=new Date();
+let selectedHistoryDate=keyDate();
+
+function findFoodForEntry(entry){
+  const foods=getFoods();
+  let match=foods.find(f=>f.name===entry.name);
+  if(!match){
+    // Favorītu pielāgotie nosaukumi var atšķirties — atrodam pēc aptuvenas uzturvērtības.
+    match=foods.find(f=>{
+      const m=(entry.grams||100)/100;
+      if(m<=0)return false;
+      return Math.abs(f.kcal-entry.kcal/m)<0.6 &&
+             Math.abs(f.p-entry.p/m)<0.2 &&
+             Math.abs(f.f-entry.f/m)<0.2 &&
+             Math.abs(f.c-entry.c/m)<0.2;
+    });
+  }
+  return match;
+}
+
+function openEditFood(dateKey,index){
+  const day=getDay(dateKey), entry=day[index];
+  if(!entry)return;
+  editContext={date:dateKey,index};
+  editFoodName.textContent=entry.name;
+  editFoodGrams.value=entry.grams;
+  editFoodModal.classList.remove('hidden');
+}
+function closeEditFood(){editFoodModal.classList.add('hidden')}
+
+function saveEditedFood(){
+  const day=getDay(editContext.date), x=day[editContext.index];
+  if(!x)return;
+  const grams=+editFoodGrams.value;
+  if(!grams || grams<=0)return;
+  const oldGrams=+x.grams||1;
+  const ratio=grams/oldGrams;
+  x.grams=grams;
+  x.kcal*=ratio;x.p*=ratio;x.f*=ratio;x.c*=ratio;x.fi*=ratio;
+  saveDay(day,editContext.date);
+  closeEditFood();
+  render();
+  if(!document.getElementById('historyView').classList.contains('hidden')){
+    renderCalendar();renderHistoryDay(editContext.date);
+  }
+}
+function deleteEditedFood(){
+  if(!confirm('Dzēst šo ierakstu?'))return;
+  const day=getDay(editContext.date);
+  day.splice(editContext.index,1);
+  saveDay(day,editContext.date);
+  closeEditFood();
+  render();
+  if(!document.getElementById('historyView').classList.contains('hidden')){
+    renderCalendar();renderHistoryDay(editContext.date);
+  }
+}
+
+function changeMonth(delta){
+  calendarCursor.setMonth(calendarCursor.getMonth()+delta);
+  renderCalendar();
+}
+function hasDayData(dateKey){return getDay(dateKey).length>0}
+function localKeyFromParts(y,m,d){
+  return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+function renderCalendar(){
+  const y=calendarCursor.getFullYear(), m=calendarCursor.getMonth();
+  const monthName=new Date(y,m,1).toLocaleDateString('lv-LV',{month:'long',year:'numeric'});
+  calendarTitle.textContent=monthName.charAt(0).toUpperCase()+monthName.slice(1);
+  const days=['P','O','T','C','Pk','S','Sv'];
+  let cells=days.map(x=>`<div class="cal-head">${x}</div>`);
+  const first=new Date(y,m,1);
+  const offset=(first.getDay()+6)%7;
+  for(let i=0;i<offset;i++)cells.push('<div class="cal-day empty"></div>');
+  const count=new Date(y,m+1,0).getDate();
+  for(let d=1;d<=count;d++){
+    const k=localKeyFromParts(y,m,d);
+    const cls=['cal-day'];
+    if(k===keyDate())cls.push('today');
+    if(k===selectedHistoryDate)cls.push('selected');
+    if(hasDayData(k))cls.push('hasdata');
+    cells.push(`<button class="${cls.join(' ')}" onclick="selectHistoryDay('${k}')">${d}</button>`);
+  }
+  calendar.innerHTML=cells.join('');
+}
+function selectHistoryDay(k){
+  selectedHistoryDate=k;
+  const [y,m]=k.split('-').map(Number);
+  calendarCursor=new Date(y,m-1,1);
+  renderCalendar();renderHistoryDay(k);
+}
+function renderHistoryDay(k){
+  const day=getDay(k), t=totals(day), g=getTargets();
+  const d=new Date(k+'T12:00:00');
+  historyDayTitle.textContent=d.toLocaleDateString('lv-LV',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  historyCount.textContent=`${day.length} ieraksti`;
+  historyMetrics.innerHTML=
+    metricCard('🔥 kcal',t.kcal,g.kcal,'kcal')+
+    metricCard('🥩 OB',t.p,g.p,'g')+
+    metricCard('🥑 Tauki',t.f,g.f,'g')+
+    metricCard('🍚 OH',t.c,g.c,'g')+
+    metricCard('🌿 Šķ.',t.fi,g.fi,'g');
+  if(!day.length){
+    historyList.innerHTML='<div class="muted">Šajā dienā nav ierakstu.</div>';
+    return;
+  }
+  historyList.innerHTML=day.map((x,i)=>`<div class="history-row">
+    <div class="between">
+      <div><b>${x.name}</b><div class="history-stats">${x.grams} g · ${Math.round(x.kcal)} kcal · OB ${round1(x.p)} · T ${round1(x.f)} · OH ${round1(x.c)} · Šķ. ${round1(x.fi)}</div></div>
+      <button class="secondary small" onclick="openEditFood('${k}',${i})">Labot</button>
+    </div>
+  </div>`).join('');
+}
+
+function suggestionScore(kcal,p,f,c,fi,rem,g){
+  const kcalErr=Math.abs(kcal-rem.kcal)/Math.max(g.kcal,1);
+  const pNeed=Math.max(0,rem.p-p)/Math.max(g.p,1);
+  const fatOver=Math.max(0,f-rem.f)/Math.max(g.f,1);
+  const cErr=rem.c>0?Math.abs(c-rem.c)/Math.max(g.c,1):Math.max(0,c)/Math.max(g.c,1);
+  const fiNeed=Math.max(0,rem.fi-fi)/Math.max(g.fi,1);
+  return kcalErr*4 + pNeed*3.5 + fatOver*4 + cErr*.45 + fiNeed*.8;
+}
+
+function buildSuggestionCandidates(){
+  const foods=getFoods();
+  const candidates=[];
+  for(const f of foods){
+    for(let g=50;g<=350;g+=25){
+      const m=g/100;
+      candidates.push({
+        foods:[{f,g}],
+        kcal:f.kcal*m,p:f.p*m,fat:f.f*m,c:f.c*m,fi:f.fi*m
+      });
+    }
+  }
+  // Divu produktu kombinācijas, pa samērīgiem soļiem
+  const limited=foods.slice(0,24);
+  for(let i=0;i<limited.length;i++){
+    for(let j=i+1;j<limited.length;j++){
+      const a=limited[i],b=limited[j];
+      for(const ga of [50,100,150,200,250]){
+        for(const gb of [50,100,150,200,250]){
+          const ma=ga/100, mb=gb/100;
+          const kcal=a.kcal*ma+b.kcal*mb;
+          if(kcal>750)continue;
+          candidates.push({
+            foods:[{f:a,g:ga},{f:b,g:gb}],
+            kcal,
+            p:a.p*ma+b.p*mb,
+            fat:a.f*ma+b.f*mb,
+            c:a.c*ma+b.c*mb,
+            fi:a.fi*ma+b.fi*mb
+          });
+        }
+      }
+    }
+  }
+  return candidates;
+}
+
+function renderSuggestions(){
+  const box=document.getElementById('suggestions');
+  if(!box)return;
+  const t=totals(), g=getTargets();
+  const rem={
+    kcal:Math.max(0,g.kcal-t.kcal),
+    p:Math.max(0,g.p-t.p),
+    f:Math.max(0,g.f-t.f),
+    c:Math.max(0,g.c-t.c),
+    fi:Math.max(0,g.fi-t.fi)
+  };
+  if(rem.kcal<=40){
+    box.innerHTML=`<div class="notice">Kaloriju mērķis būtībā jau sasniegts. Atlikums: <b>${Math.round(rem.kcal)} kcal</b>.</div>`;
+    return;
+  }
+  let cs=buildSuggestionCandidates();
+  cs=cs.filter(x=>x.kcal>=Math.max(40,rem.kcal*.45) && x.kcal<=rem.kcal*1.12+30);
+  cs.forEach(x=>x.score=suggestionScore(x.kcal,x.p,x.fat,x.c,x.fi,rem,g));
+  cs.sort((a,b)=>a.score-b.score);
+
+  const chosen=[];
+  for(const x of cs){
+    const sig=x.foods.map(z=>z.f.id).sort().join('|');
+    if(chosen.some(y=>y.sig===sig))continue;
+    chosen.push({...x,sig});
+    if(chosen.length===3)break;
+  }
+
+  const head=`<div class="notice" style="margin-bottom:10px">
+    Atlikums: <b>${Math.round(rem.kcal)} kcal</b> · OB <b>${round1(rem.p)} g</b> · T <b>${round1(rem.f)} g</b> · OH ~<b>${round1(rem.c)} g</b> · Šķ. <b>${round1(rem.fi)} g</b>
+  </div>`;
+  if(!chosen.length){
+    box.innerHTML=head+'<div class="muted">No saglabātajiem produktiem šobrīd nav laba varianta.</div>';
+    return;
+  }
+  box.innerHTML=head+chosen.map((x,i)=>{
+    const names=x.foods.map(z=>`${z.f.name} ${z.g} g`).join(' + ');
+    const payload=encodeURIComponent(JSON.stringify(x.foods.map(z=>({id:z.f.id,g:z.g}))));
+    return `<div class="suggest-option">
+      <div class="suggest-foods">${i+1}. ${names}</div>
+      <div class="history-stats">${Math.round(x.kcal)} kcal · OB ${round1(x.p)} · T ${round1(x.fat)} · OH ${round1(x.c)} · Šķ. ${round1(x.fi)}</div>
+      <div style="margin-top:8px"><button class="secondary small" onclick="addSuggestion('${payload}')">+ Pievienot dienai</button></div>
+    </div>`;
+  }).join('');
+}
+function addSuggestion(payload){
+  const items=JSON.parse(decodeURIComponent(payload)), day=getDay(), foods=getFoods();
+  items.forEach(z=>{
+    const f=foods.find(x=>x.id===z.id); if(!f)return;
+    const m=z.g/100;
+    day.push({name:f.name,grams:z.g,kcal:f.kcal*m,p:f.p*m,f:f.f*m,c:f.c*m,fi:f.fi*m});
+  });
+  saveDay(day);render();
+}
 
 
 const defaultFavorites=[
@@ -467,10 +764,12 @@ const oldRender=render;
 render=function(){oldRender();renderQuick()};
 
 
-[scannerModal,favoritesModal].forEach(m=>{
+[scannerModal,favoritesModal,editFoodModal].forEach(m=>{
   m.addEventListener('click',e=>{
     if(e.target===m){
-      if(m===scannerModal) closeScanner(); else closeFavorites();
+      if(m===scannerModal) closeScanner();
+      else if(m===favoritesModal) closeFavorites();
+      else closeEditFood();
     }
   });
 });
