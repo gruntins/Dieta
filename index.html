@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#111827" />
+  <meta name="theme-color" content="#ffffff" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="GruntinsFIT" />
   <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; form-action 'self'">
   <link rel="manifest" href="manifest.webmanifest" />
@@ -13,114 +13,51 @@
   <title>GruntinsFIT</title>
   <!-- GruntinsFIT v8.0: trends + recent foods + search + backup + PWA + unified progress -->
   <style>
-    :root{
-      --bg:#0b0f14; --card:#121821; --card2:#171f2b; --text:#f6f7f9; --muted:#9ba7b4;
-      --accent:#55d187; --warn:#f4c15d; --bad:#ff7a7a; --line:#263140; --chip:#1d2633;
-    }
-    *,*::before,*::after{box-sizing:border-box}
-    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
-    .app{max-width:720px;margin:0 auto;padding:20px 16px 110px}
-    h1{font-size:30px;letter-spacing:.5px;margin:6px 0 4px}
-    .sub{color:var(--muted);font-size:14px;margin-bottom:18px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
-    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .between{display:flex;justify-content:space-between;gap:10px;align-items:center}
-    button,input,select{font:inherit}
-    button{border:0;border-radius:12px;padding:11px 14px;background:var(--accent);color:#07120b;font-weight:700;cursor:pointer}
-    button.secondary{background:var(--chip);color:var(--text);border:1px solid var(--line)}
-    button.danger{background:#3a1f24;color:#ffc6c6;border:1px solid #63323a}
-    input,select{width:100%;background:#0e141c;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px}
-    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-    .metric{background:var(--card2);padding:12px;border-radius:14px}
-    .metric .name{font-size:12px;color:var(--muted)}
-    .metric .value{font-size:20px;font-weight:800;margin-top:3px}
-    .metric .remain{font-size:11px;color:var(--muted);margin-top:2px}
-    .bar{height:8px;background:#25303d;border-radius:99px;overflow:hidden;margin-top:8px}
-    .fill{height:100%;width:0;background:var(--accent)}
-    .fill.low{background:var(--bad)}
-    .fill.mid{background:var(--warn)}
-    .fill.ok{background:var(--accent)}
-    .fill.over{background:#f59e0b}
-    .food{display:grid;grid-template-columns:1fr auto;gap:8px;padding:11px 0;border-bottom:1px solid var(--line)}
-    .food:last-child{border-bottom:0}
-    .food .meta{font-size:12px;color:var(--muted);margin-top:3px}
-    .food .kcal{font-weight:800}
-    .pill{display:inline-block;background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:8px 10px;font-size:13px}
-    .muted{color:var(--muted)}
-    .hidden{display:none!important}
-    .section-title{font-size:16px;font-weight:800;margin:0 0 12px}
-    .tabs{position:fixed;left:0;right:0;bottom:0;background:rgba(11,15,20,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
-    .tabs .inner{max-width:720px;margin:auto;display:grid;grid-template-columns:repeat(5,1fr);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
-    .tabs button{background:transparent;color:var(--muted);padding:10px 4px}
-    .tabs button.active{color:var(--accent)}
-    .small{font-size:12px}
-    .avg{display:grid;grid-template-columns:1fr auto;gap:6px;padding:8px 0;border-bottom:1px solid var(--line)}
-.calendar-nav{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;margin-bottom:12px}
-.calendar-title{text-align:center;font-weight:800}
-.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.cal-head{text-align:center;color:var(--muted);font-size:11px;padding:5px 0}
-.cal-day{min-height:48px;padding:6px 3px;border-radius:10px;background:var(--chip);border:1px solid var(--line);color:var(--text);text-align:center;font-weight:700}
-.cal-day.empty{visibility:hidden}
-.cal-day.today{border-color:var(--accent)}
-.cal-day.hasdata::after{content:'•';display:block;color:var(--accent);font-size:14px;line-height:8px}
-.cal-day.selected{background:var(--accent);color:#07120b}
-.history-row{padding:11px 0;border-bottom:1px solid var(--line)}
-.history-row:last-child{border-bottom:0}
-.history-stats{font-size:12px;color:var(--muted);margin-top:4px}
-.suggest-main{font-size:19px;font-weight:800;margin-bottom:6px}
-.suggest-option{padding:12px 0;border-bottom:1px solid var(--line)}
-.suggest-option:last-child{border-bottom:0}
-.suggest-foods{font-weight:800}
-.food-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:6px}
-.food-actions button{padding:7px 10px}
-.notice{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px;font-size:13px}
-.weight-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.weight-trends{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
-.weight-stat{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px}
-.weight-stat .v{font-size:22px;font-weight:800;margin-top:4px}
-.weight-chart-wrap{overflow-x:auto}
-#weightChart{width:100%;min-width:560px;height:260px;display:block}
-.weight-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
-.weight-row:last-child{border-bottom:0}
-.weight-input-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;width:100%}
-.weight-field{min-width:0;width:100%}
-#weightDate,#weightValue{display:block;width:100%;min-width:0;max-width:100%;text-align:center;box-sizing:border-box}
-#weightDate{inline-size:100%;max-inline-size:100%;min-inline-size:0}
-#weightDate::-webkit-date-and-time-value{text-align:center}
-#weightDate::-webkit-datetime-edit{display:block;text-align:center;width:100%}
-
-    @media(max-width:600px){.grid5{grid-template-columns:1fr 1fr}.grid5 .metric:last-child{grid-column:1/-1}.grid2{grid-template-columns:1fr}.weight-input-grid{grid-template-columns:minmax(0,1fr)}}
-  
-.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.quick{background:var(--chip);color:var(--text);border:1px solid var(--line);padding:12px 8px}
-.quick b{display:block;font-size:14px}.quick span{font-size:11px;color:var(--muted)}
-.scanbox{border:1px dashed var(--line);border-radius:14px;padding:12px;margin-top:12px}
-.modal.hidden{display:none!important}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:12px}
-.sheet{width:min(720px,100%);max-height:90vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px}
-.status{font-size:13px;color:var(--muted);margin-top:10px}
-@media(max-width:600px){.quick-grid{grid-template-columns:1fr 1fr}.weight-trends{grid-template-columns:1fr}.weight-summary{grid-template-columns:1fr 1fr}.weight-summary .weight-stat:last-child{grid-column:1/-1}}
-.search-results{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}.search-chip{background:var(--chip);color:var(--text);border:1px solid var(--line);padding:8px 10px;font-weight:600}.version-badge{display:inline-block;background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 9px;font-size:12px;color:var(--muted)}
+:root{
+  --bg:#f5f7f9;--card:#ffffff;--card2:#f8fafb;--text:#101820;--muted:#687583;
+  --accent:#16b86a;--accent-soft:#eaf8f1;--warn:#f5bd26;--bad:#ff4e55;--orange:#ff7b35;
+  --line:#e4e9ee;--chip:#f2f5f7;--shadow:0 6px 24px rgba(28,43,56,.06);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;background:linear-gradient(180deg,#fff 0,#f7f9fb 420px,#f5f7f9 100%);color:var(--text);-webkit-font-smoothing:antialiased}
+.app{max-width:720px;margin:0 auto;padding:calc(22px + env(safe-area-inset-top)) 16px 112px}
+.brand-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.brand{font-size:34px;font-weight:900;letter-spacing:-1.5px}.brand span{color:var(--accent)}
+.brand-sub{font-size:13px;color:var(--muted);font-weight:600;margin-top:2px}.version-badge{display:inline-block;background:#eef1f4;border:0;border-radius:999px;padding:5px 9px;font-size:11px;color:#52606d;margin-left:6px;vertical-align:middle}
+h1{font-size:36px;letter-spacing:-1.4px;margin:4px 0 5px;line-height:1.05}.sub{color:var(--muted);font-size:15px;margin-bottom:20px}
+.card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.between{display:flex;justify-content:space-between;gap:10px;align-items:center}
+button,input,select{font:inherit}button{border:0;border-radius:13px;padding:11px 14px;background:var(--accent);color:white;font-weight:800;cursor:pointer}button.secondary{background:var(--chip);color:var(--text);border:1px solid var(--line)}button.danger{background:#fff0f1;color:#c6373f;border:1px solid #ffd7da}
+input,select{width:100%;background:#fbfcfd;color:var(--text);border:1px solid #dce3e8;border-radius:14px;padding:13px;outline:none}input:focus,select:focus{border-color:#92dcb7;box-shadow:0 0 0 3px #e9f8f1}label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px;font-weight:650}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid5{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{background:var(--card);padding:14px;border-radius:18px;border:1px solid var(--line);box-shadow:0 3px 12px rgba(30,50,65,.04)}.metric .name{font-size:14px;color:var(--text);font-weight:800}.metric .value{font-size:19px;font-weight:900;margin-top:4px}.metric .remain{font-size:11px;color:var(--muted);margin-top:3px}.bar{height:8px;background:#e8edf1;border-radius:99px;overflow:hidden;margin-top:10px}.fill{height:100%;width:0;background:var(--accent);border-radius:99px}.fill.low{background:var(--bad)}.fill.mid{background:var(--warn)}.fill.ok{background:var(--accent)}.fill.over{background:var(--orange)}
+.kcal-hero{display:grid;grid-template-columns:118px 1fr;gap:18px;align-items:center;padding:18px}.kcal-ring{--pct:0;--ring:var(--accent);width:108px;height:108px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--ring) calc(var(--pct)*1%),#e9eef1 0);position:relative}.kcal-ring::after{content:"";position:absolute;inset:10px;background:#fff;border-radius:50%}.kcal-ring>div{position:relative;z-index:1;text-align:center}.kcal-ring b{font-size:26px;display:block}.kcal-ring span{font-size:11px;color:var(--muted)}.kcal-label{font-size:14px;color:var(--muted);font-weight:700}.kcal-value{font-size:30px;font-weight:900;letter-spacing:-1px;margin-top:3px}.kcal-remain{font-size:17px;color:var(--muted);margin-top:4px}.kcal-remain b{color:#44515e}
+.section-title{font-size:17px;font-weight:900;margin:0 0 12px;letter-spacing:-.2px}.small{font-size:12px}.muted{color:var(--muted)}.hidden{display:none!important}
+.food{display:grid;grid-template-columns:1fr auto;gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}.food:last-child{border-bottom:0}.food .meta{font-size:12px;color:var(--muted);margin-top:3px}.food .kcal{font-weight:900}.pill{display:inline-block;background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:8px 10px;font-size:12px}.avg{display:grid;grid-template-columns:1fr auto;gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}
+.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.quick{background:#f6f8fa;color:var(--text);border:1px solid var(--line);padding:12px 8px}.quick b{display:block;font-size:13px}.quick span{font-size:11px;color:var(--muted)}
+.search-results{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}.search-chip{background:var(--accent-soft);color:#0d8650;border:1px solid #cfeedd;padding:8px 10px;font-weight:700}
+.tabs{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.94);backdrop-filter:blur(18px);border-top:1px solid var(--line);z-index:15}.tabs .inner{max-width:720px;margin:auto;display:grid;grid-template-columns:repeat(5,1fr);padding:7px 10px calc(8px + env(safe-area-inset-bottom));gap:4px}.tabs button{background:transparent;color:#71808e;padding:9px 2px 7px;border-radius:16px;font-size:11px;line-height:1.1}.tabs button::before{display:block;font-size:21px;line-height:1;margin-bottom:5px}.tabs #tabToday::before{content:'⌂'}.tabs #tabWeek::before{content:'▥'}.tabs #tabHistory::before{content:'◷'}.tabs #tabWeight::before{content:'▣'}.tabs #tabSettings::before{content:'⚙'}.tabs button.active{color:#0a9d5a;background:var(--accent-soft)}
+.calendar-nav{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;margin-bottom:12px}.calendar-title{text-align:center;font-weight:900}.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.cal-head{text-align:center;color:var(--muted);font-size:11px;padding:5px 0}.cal-day{min-height:48px;padding:6px 3px;border-radius:12px;background:#f7f9fa;border:1px solid var(--line);color:var(--text);text-align:center;font-weight:800}.cal-day.empty{visibility:hidden}.cal-day.today{border-color:var(--accent)}.cal-day.hasdata::after{content:'•';display:block;color:var(--accent);font-size:14px;line-height:8px}.cal-day.selected{background:var(--accent);color:#fff}.history-row{padding:11px 0;border-bottom:1px solid var(--line)}.history-row:last-child{border-bottom:0}.history-stats{font-size:12px;color:var(--muted);margin-top:4px}.suggest-main{font-size:18px;font-weight:900;margin-bottom:6px}.suggest-option{padding:12px 0;border-bottom:1px solid var(--line)}.suggest-option:last-child{border-bottom:0}.suggest-foods{font-weight:800}.food-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:6px}.food-actions button{padding:7px 10px}.notice{background:#f8fafb;border:1px solid var(--line);border-radius:13px;padding:11px;font-size:13px}
+.weight-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.weight-trends{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}.weight-stat{background:#f8fafb;border:1px solid var(--line);border-radius:15px;padding:12px}.weight-stat .v{font-size:20px;font-weight:900;margin-top:4px}.weight-chart-wrap{overflow-x:auto}#weightChart{width:100%;min-width:560px;height:260px;display:block;color:var(--accent)}.weight-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.weight-row:last-child{border-bottom:0}.weight-input-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;width:100%}.weight-field{min-width:0;width:100%}#weightDate,#weightValue{display:block;width:100%;min-width:0;max-width:100%;text-align:center;box-sizing:border-box}#weightDate{inline-size:100%;max-inline-size:100%;min-inline-size:0}#weightDate::-webkit-date-and-time-value{text-align:center}#weightDate::-webkit-datetime-edit{display:block;text-align:center;width:100%}
+.scanbox{border:1px dashed #ccd5dc;border-radius:14px;padding:12px;margin-top:12px}.modal.hidden{display:none!important}.modal{position:fixed;inset:0;background:rgba(12,20,28,.46);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:12px}.sheet{width:min(720px,100%);max-height:90vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:0 -10px 50px rgba(20,35,45,.15)}.status{font-size:13px;color:var(--muted);margin-top:10px}
+.today-heading{display:flex;justify-content:space-between;align-items:end;gap:10px;margin-bottom:14px}.date-pill{background:#fff;border:1px solid var(--line);border-radius:999px;padding:10px 14px;font-size:12px;color:var(--text);font-weight:800;box-shadow:0 3px 12px rgba(30,50,65,.04)}
+@media(max-width:600px){.grid2{grid-template-columns:1fr}.weight-input-grid{grid-template-columns:minmax(0,1fr)}.quick-grid{grid-template-columns:1fr 1fr}.weight-trends{grid-template-columns:1fr}.weight-summary{grid-template-columns:1fr 1fr}.weight-summary .weight-stat:last-child{grid-column:1/-1}.kcal-hero{grid-template-columns:102px 1fr;gap:14px;padding:15px}.kcal-ring{width:94px;height:94px}.kcal-value{font-size:26px}.today-heading{align-items:center}.date-pill{padding:9px 12px}.brand{font-size:31px}}
 </style>
+
 </head>
 <body>
 <div class="app">
   <div id="todayView">
-    <h1>GruntinsFIT</h1>
-    <div class="sub" id="todayLabel"></div>
-
-    <div class="card">
-      <div class="between">
-        <div>
-          <div class="section-title">Šodienas progress</div>
-          <div class="small muted">Prioritāte: kcal → OB → tauki → OH; šķiedrvielas atsevišķi</div>
-        </div>
-        <button class="secondary" onclick="resetToday()">Jauna diena</button>
-      </div>
-      <div class="grid5" id="metrics"></div>
+    <div class="brand-row">
+      <div><div class="brand">Gruntins<span>FIT</span><span class="version-badge">v8</span></div><div class="brand-sub">Labāka versija Tev</div></div>
+      <button class="secondary small" onclick="resetToday()">Jauna diena</button>
     </div>
+    <div class="today-heading">
+      <div><h1>Šodien</h1><div class="sub" id="todayLabel" style="margin-bottom:0"></div></div>
+      <div class="date-pill">◀︎ &nbsp; 📅 Šodien &nbsp; ▶︎</div>
+    </div>
+    <div class="card kcal-hero" id="kcalHero"></div>
+    <div class="grid5" id="metrics" style="margin-bottom:14px"></div>
 
     <div class="card">
       <div class="between"><div class="section-title">⭐ Favorīti</div><button class="secondary small" onclick="openFavorites()">Labot</button></div>
@@ -268,7 +205,7 @@
       <button onclick="saveTargets()">Saglabāt mērķus</button>
     </div>
     <div class="card">
-      <div class="between"><div class="section-title">Dati un rezerves kopija</div><span class="version-badge">GruntinsFIT v8.0</span></div>
+      <div class="between"><div class="section-title">Dati un rezerves kopija</div><span class="version-badge">GruntinsFIT v8 Visual</span></div>
       <div class="row">
         <button class="secondary" onclick="exportBackup()">⬇️ Eksportēt backup</button>
         <button class="secondary" onclick="document.getElementById('backupFile').click()">⬆️ Importēt backup</button>
@@ -377,7 +314,7 @@
 </div>
 
 <script>
-const APP_VERSION='8.0';
+const APP_VERSION='8.0-visual';
 const defaultTargets={kcal:2100,p:156,f:47,c:263,fi:30};
 const baseFoods=[
   {id:'buckwheat',name:'Griķi (sausi)',kcal:343.2,p:13.28,f:3.44,c:71.52,fi:10},
@@ -476,22 +413,23 @@ function chooseSearchedFood(id){
 function totals(day=getDay()){
   return day.reduce((a,x)=>({kcal:a.kcal+x.kcal,p:a.p+x.p,f:a.f+x.f,c:a.c+x.c,fi:a.fi+x.fi}),{kcal:0,p:0,f:0,c:0,fi:0})
 }
-function metricCard(name,val,target,unit){
+function metricCard(name,val,target,unit,icon=''){
   const pct=target?val/target*100:0;
   const cls=pct<=30?'low':pct<=70?'mid':pct<=100?'ok':'over';
   const remain=target-val;
   const remtxt=remain>=0?`paliek ${round1(remain)} ${unit}`:`pāri ${round1(-remain)} ${unit}`;
-  return `<div class="metric"><div class="name">${name}</div><div class="value">${round1(val)}/${target}</div><div class="remain">(${remtxt}) · ${Math.round(pct)}%</div><div class="bar"><div class="fill ${cls}" style="width:${Math.min(Math.max(pct,0),100)}%"></div></div></div>`
+  return `<div class="metric"><div class="between"><div class="name">${icon} ${name}</div><div class="value">${round1(val)} / ${target} ${unit}</div></div><div class="bar"><div class="fill ${cls}" style="width:${Math.min(Math.max(pct,0),100)}%"></div></div><div class="remain">${Math.round(pct)}% · ${remtxt}</div></div>`
 }
 function render(){
-  document.getElementById('todayLabel').textContent=new Date().toLocaleDateString('lv-LV',{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('todayLabel').textContent=new Date().toLocaleDateString('lv-LV',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const day=getDay(), t=totals(day), g=getTargets();
+  const kpct=g.kcal?t.kcal/g.kcal*100:0;
+  document.getElementById('kcalHero').innerHTML=`<div class="kcal-ring" style="--pct:${Math.min(Math.max(kpct,0),100)}"><div><b>${Math.round(kpct)}%</b><span>no mērķa</span></div></div><div><div class="kcal-label">Kopā kalorijas</div><div class="kcal-value">${Math.round(t.kcal)} / ${g.kcal} kcal</div><div class="kcal-remain">${t.kcal<=g.kcal?'Paliek':'Pāri'} <b>${Math.round(Math.abs(g.kcal-t.kcal))}</b></div></div>`;
   document.getElementById('metrics').innerHTML=
-    metricCard('🔥 kcal',t.kcal,g.kcal,'kcal')+
-    metricCard('🥩 OB',t.p,g.p,'g')+
-    metricCard('🥑 Tauki',t.f,g.f,'g')+
-    metricCard('🍚 OH',t.c,g.c,'g')+
-    metricCard('🌿 Šķ.',t.fi,g.fi,'g');
+    metricCard('Proteīns',t.p,g.p,'g','🥩')+
+    metricCard('Ogļhidrāti',t.c,g.c,'g','🌾')+
+    metricCard('Tauki',t.f,g.f,'g','💧')+
+    metricCard('Šķiedrvielas',t.fi,g.fi,'g','🌿');
   document.getElementById('countPill').textContent=`${day.length} ieraksti`;
   const list=document.getElementById('foodList');
   if(!day.length){list.innerHTML='<div class="muted">Vēl nekas nav pievienots.</div>'}
