@@ -29,3 +29,9 @@ Labojums v8.2.3:
 - Jutīgāka sadaļu svaipošana: pietiek ar 32 px vilcienu (iepriekš 50 px).
 - Visas sadaļas aizpilda vismaz pilnu ekrāna augstumu.
 - Apakšējā izvēlne paliek pie ekrāna apakšmalas, ņemot vērā iPhone drošo zonu.
+
+Labojums v8.2.4:
+- Apakšējai navigācijai rezervēta sava ekrāna rinda. Ritinās tikai saturs virs tās.
+- Īsas un garas sadaļas izmanto vienādu navigācijas novietojumu.
+- Svaipošanas slieksnis samazināts līdz 22 px, uzlabota diagonālu kustību atpazīšana.
+- Jaunā versija aplikācijas augšā redzama kā v8.2.4.
