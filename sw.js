@@ -1,4 +1,4 @@
-const CACHE='gruntinsfit-v6';
+const CACHE='gruntinsfit-v7';
 const ASSETS=['./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install',e=>{

@@ -4,9 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
+  <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; form-action 'self'">
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <title>GruntinsFIT</title>
+  <!-- GruntinsFIT v7: XSS hardening + weight UI/decimal fixes -->
   <style>
     :root{
       --bg:#0b0f14; --card:#121821; --card2:#171f2b; --text:#f6f7f9; --muted:#9ba7b4;
@@ -75,8 +77,13 @@
 #weightChart{width:100%;min-width:560px;height:260px;display:block}
 .weight-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
 .weight-row:last-child{border-bottom:0}
+.weight-input-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;width:100%}
+.weight-field{min-width:0;width:100%}
+#weightDate,#weightValue{display:block;width:100%;min-width:0;max-width:100%;text-align:center}
+#weightDate::-webkit-date-and-time-value{text-align:center}
+#weightDate::-webkit-datetime-edit{display:block;text-align:center;width:100%}
 
-    @media(max-width:600px){.grid5{grid-template-columns:1fr 1fr}.grid5 .metric:last-child{grid-column:1/-1}.grid2{grid-template-columns:1fr}}
+    @media(max-width:600px){.grid5{grid-template-columns:1fr 1fr}.grid5 .metric:last-child{grid-column:1/-1}.grid2{grid-template-columns:1fr}.weight-input-grid{grid-template-columns:minmax(0,1fr)}}
   
 .quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .quick{background:var(--chip);color:var(--text);border:1px solid var(--line);padding:12px 8px}
@@ -195,14 +202,14 @@
 
     <div class="card">
       <div class="section-title">➕ Pievienot svaru</div>
-      <div class="grid2">
-        <div>
+      <div class="weight-input-grid">
+        <div class="weight-field">
           <label>Datums</label>
           <input id="weightDate" type="date">
         </div>
-        <div>
+        <div class="weight-field">
           <label>Svars, kg</label>
-          <input id="weightValue" type="number" inputmode="decimal" step="0.1" placeholder="75.0">
+          <input id="weightValue" type="text" inputmode="decimal" autocomplete="off" pattern="[0-9]*[.,]?[0-9]*" placeholder="75,0">
         </div>
       </div>
       <div style="margin-top:12px">
@@ -365,12 +372,58 @@ const baseFoods=[
   {id:'buttermilk',name:'Annele paniņas',kcal:58,p:3,f:0.4,c:9.6,fi:0}
 ];
 
+// ===== GruntinsFIT v7: droša datu apstrāde / XSS aizsardzība =====
+function escapeHTML(value){
+  return String(value ?? '').replace(/[&<>"']/g,ch=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[ch]));
+}
+function escapeAttr(value){return escapeHTML(value).replace(/`/g,'&#96;')}
+function safeJson(raw,fallback){
+  try{return JSON.parse(raw)}catch(e){return fallback}
+}
+function finiteNumber(value,fallback=0){
+  const n=Number(value); return Number.isFinite(n)?n:fallback;
+}
+function parseLocalizedNumber(value){
+  const s=String(value ?? '').trim().replace(/\s+/g,'').replace(',','.');
+  if(!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(s))return NaN;
+  const n=Number(s); return Number.isFinite(n)?n:NaN;
+}
+function cleanText(value,max=160){
+  return String(value ?? '').replace(/[\u0000-\u001F\u007F]/g,'').trim().slice(0,max);
+}
+function normalizeFood(f){
+  if(!f || typeof f!=='object')return null;
+  const id=cleanText(f.id,80);
+  const name=cleanText(f.name,160);
+  if(!id || !name)return null;
+  return {id,name,kcal:finiteNumber(f.kcal),p:finiteNumber(f.p),f:finiteNumber(f.f),c:finiteNumber(f.c),fi:finiteNumber(f.fi)};
+}
+function normalizeDayEntry(x){
+  if(!x || typeof x!=='object')return null;
+  const name=cleanText(x.name,160);
+  if(!name)return null;
+  return {name,grams:finiteNumber(x.grams),kcal:finiteNumber(x.kcal),p:finiteNumber(x.p),f:finiteNumber(x.f),c:finiteNumber(x.c),fi:finiteNumber(x.fi)};
+}
 function keyDate(d=new Date()){return d.toISOString().slice(0,10)}
-function getTargets(){return JSON.parse(localStorage.getItem('targets')||JSON.stringify(defaultTargets))}
-function getFoods(){return [...baseFoods,...JSON.parse(localStorage.getItem('customFoods')||'[]')]}
-function getDay(dateKey=keyDate()){return JSON.parse(localStorage.getItem('day_'+dateKey)||'[]')}
+function getTargets(){
+  const x=safeJson(localStorage.getItem('targets')||'',{});
+  return {
+    kcal:finiteNumber(x.kcal,defaultTargets.kcal),p:finiteNumber(x.p,defaultTargets.p),
+    f:finiteNumber(x.f,defaultTargets.f),c:finiteNumber(x.c,defaultTargets.c),fi:finiteNumber(x.fi,defaultTargets.fi)
+  };
+}
+function getFoods(){
+  const custom=safeJson(localStorage.getItem('customFoods')||'[]',[]);
+  return [...baseFoods,...(Array.isArray(custom)?custom.map(normalizeFood).filter(Boolean):[])];
+}
+function getDay(dateKey=keyDate()){
+  const x=safeJson(localStorage.getItem('day_'+dateKey)||'[]',[]);
+  return Array.isArray(x)?x.map(normalizeDayEntry).filter(Boolean):[];
+}
 function saveDay(x,dateKey=keyDate()){localStorage.setItem('day_'+dateKey,JSON.stringify(x))}
-function round1(x){return Math.round(x*10)/10}
+function round1(x){return Math.round(finiteNumber(x)*10)/10}
 
 function renderFoodSelect(){
   const s=document.getElementById('foodSelect'); s.innerHTML='';
@@ -399,7 +452,7 @@ function render(){
   const list=document.getElementById('foodList');
   if(!day.length){list.innerHTML='<div class="muted">Vēl nekas nav pievienots.</div>'}
   else{
-    list.innerHTML=day.map((x,i)=>`<div class="food"><div><b>${x.name}</b><div class="meta">${x.grams} g · OB ${round1(x.p)} · T ${round1(x.f)} · OH ${round1(x.c)} · Šķ. ${round1(x.fi)}</div></div><div><div class="kcal">${Math.round(x.kcal)} kcal</div><div class="food-actions"><button class="secondary small" onclick="openEditFood('${keyDate()}',${i})">Labot</button><button class="secondary small" onclick="removeFood(${i})">Dzēst</button></div></div></div>`).join('')
+    list.innerHTML=day.map((x,i)=>`<div class="food"><div><b>${escapeHTML(x.name)}</b><div class="meta">${x.grams} g · OB ${round1(x.p)} · T ${round1(x.f)} · OH ${round1(x.c)} · Šķ. ${round1(x.fi)}</div></div><div><div class="kcal">${Math.round(x.kcal)} kcal</div><div class="food-actions"><button class="secondary small" onclick="openEditFood('${keyDate()}',${i})">Labot</button><button class="secondary small" onclick="removeFood(${i})">Dzēst</button></div></div></div>`).join('')
   }
   renderWeek(); loadTargetInputs(); renderSuggestions();
 }
@@ -414,8 +467,9 @@ function addFood(){
 function removeFood(i){const d=getDay();d.splice(i,1);saveDay(d);render()}
 function showCustom(){document.getElementById('customCard').classList.toggle('hidden')}
 function saveCustom(){
-  const name=cName.value.trim(); if(!name)return;
-  const cf=JSON.parse(localStorage.getItem('customFoods')||'[]');
+  const name=cleanText(cName.value,160); if(!name)return;
+  const saved=safeJson(localStorage.getItem('customFoods')||'[]',[]);
+  const cf=Array.isArray(saved)?saved:[];
   cf.push({id:'c_'+Date.now(),name,kcal:+cKcal.value||0,p:+cP.value||0,f:+cF.value||0,c:+cC.value||0,fi:+cFi.value||0});
   localStorage.setItem('customFoods',JSON.stringify(cf));
   ['cName','cKcal','cP','cF','cC'].forEach(id=>document.getElementById(id).value=''); cFi.value=0;
@@ -457,19 +511,19 @@ function clearAll(){if(confirm('Tiešām dzēst VISUS aplikācijas datus?')){loc
 
 // ===== GruntinsFIT: svara uzskaite =====
 function getWeights(){
-  try{
-    const x=JSON.parse(localStorage.getItem('weight_entries')||'[]');
-    return Array.isArray(x)?x:[];
-  }catch(e){return []}
+  const x=safeJson(localStorage.getItem('weight_entries')||'[]',[]);
+  if(!Array.isArray(x))return [];
+  return x.map(e=>({date:cleanText(e?.date,10),weight:finiteNumber(e?.weight,NaN)}))
+    .filter(e=>/^\d{4}-\d{2}-\d{2}$/.test(e.date) && Number.isFinite(e.weight) && e.weight>=30 && e.weight<=300);
 }
 function saveWeights(x){
   localStorage.setItem('weight_entries',JSON.stringify(x));
 }
 function addWeightEntry(){
   const date=weightDate.value;
-  const value=+weightValue.value;
+  const value=parseLocalizedNumber(weightValue.value);
   if(!date){alert('Izvēlies datumu.');return;}
-  if(!value || value<30 || value>300){alert('Ievadi korektu svaru kg.');return;}
+  if(!Number.isFinite(value) || value<30 || value>300){alert('Ievadi korektu svaru kg, piemēram 75,5.');return;}
   const arr=getWeights();
   const existing=arr.find(x=>x.date===date);
   if(existing) existing.weight=value;
@@ -490,8 +544,8 @@ function editWeightEntry(date){
   if(!x)return;
   const v=prompt('Jaunais svars, kg:',x.weight);
   if(v===null)return;
-  const n=+String(v).replace(',','.');
-  if(!n || n<30 || n>300){alert('Nederīgs svars.');return;}
+  const n=parseLocalizedNumber(v);
+  if(!Number.isFinite(n) || n<30 || n>300){alert('Nederīgs svars. Vari lietot gan komatu, gan punktu.');return;}
   x.weight=n;
   saveWeights(arr);
   renderWeight();
@@ -680,7 +734,7 @@ function renderHistoryDay(k){
   }
   historyList.innerHTML=day.map((x,i)=>`<div class="history-row">
     <div class="between">
-      <div><b>${x.name}</b><div class="history-stats">${x.grams} g · ${Math.round(x.kcal)} kcal · OB ${round1(x.p)} · T ${round1(x.f)} · OH ${round1(x.c)} · Šķ. ${round1(x.fi)}</div></div>
+      <div><b>${escapeHTML(x.name)}</b><div class="history-stats">${x.grams} g · ${Math.round(x.kcal)} kcal · OB ${round1(x.p)} · T ${round1(x.f)} · OH ${round1(x.c)} · Šķ. ${round1(x.fi)}</div></div>
       <button class="secondary small" onclick="openEditFood('${k}',${i})">Labot</button>
     </div>
   </div>`).join('');
@@ -767,18 +821,19 @@ function renderSuggestions(){
     box.innerHTML=head+'<div class="muted">No saglabātajiem produktiem šobrīd nav laba varianta.</div>';
     return;
   }
+  suggestionPayloads=chosen.map(x=>x.foods.map(z=>({id:z.f.id,g:z.g})));
   box.innerHTML=head+chosen.map((x,i)=>{
-    const names=x.foods.map(z=>`${z.f.name} ${z.g} g`).join(' + ');
-    const payload=encodeURIComponent(JSON.stringify(x.foods.map(z=>({id:z.f.id,g:z.g}))));
+    const names=x.foods.map(z=>`${escapeHTML(z.f.name)} ${z.g} g`).join(' + ');
     return `<div class="suggest-option">
       <div class="suggest-foods">${i+1}. ${names}</div>
       <div class="history-stats">${Math.round(x.kcal)} kcal · OB ${round1(x.p)} · T ${round1(x.fat)} · OH ${round1(x.c)} · Šķ. ${round1(x.fi)}</div>
-      <div style="margin-top:8px"><button class="secondary small" onclick="addSuggestion('${payload}')">+ Pievienot dienai</button></div>
+      <div style="margin-top:8px"><button class="secondary small" onclick="addSuggestion(${i})">+ Pievienot dienai</button></div>
     </div>`;
   }).join('');
 }
-function addSuggestion(payload){
-  const items=JSON.parse(decodeURIComponent(payload)), day=getDay(), foods=getFoods();
+let suggestionPayloads=[];
+function addSuggestion(index){
+  const items=suggestionPayloads[index]||[], day=getDay(), foods=getFoods();
   items.forEach(z=>{
     const f=foods.find(x=>x.id===z.id); if(!f)return;
     const m=z.g/100;
@@ -798,17 +853,17 @@ const defaultFavorites=[
 ];
 
 function getFavorites(){
-  try{
-    const saved=JSON.parse(localStorage.getItem('favorites')||'null');
-    return Array.isArray(saved) && saved.length ? saved : defaultFavorites;
-  }catch(e){ return defaultFavorites; }
+  const saved=safeJson(localStorage.getItem('favorites')||'null',null);
+  if(!Array.isArray(saved) || !saved.length)return defaultFavorites;
+  const cleaned=saved.map(q=>({id:cleanText(q?.id,80),g:Math.max(1,finiteNumber(q?.g,100)),label:cleanText(q?.label,120)})).filter(q=>q.id);
+  return cleaned.length?cleaned:defaultFavorites;
 }
 function renderQuick(){
   const foods=getFoods(), favs=getFavorites();
   quickGrid.innerHTML=favs.map((q,i)=>{
     const f=foods.find(x=>x.id===q.id); if(!f)return '';
     const label=q.label || f.name;
-    return `<button class="quick" onclick="favoriteAdd(${i})"><b>${label}</b><span>${q.g} g · ${Math.round(f.kcal*q.g/100)} kcal</span></button>`;
+    return `<button class="quick" onclick="favoriteAdd(${i})"><b>${escapeHTML(label)}</b><span>${round1(q.g)} g · ${Math.round(f.kcal*q.g/100)} kcal</span></button>`;
   }).join('') || '<div class="muted">Nav favorītu.</div>';
 }
 function favoriteAdd(i){
@@ -828,11 +883,11 @@ function closeFavorites(){ favoritesModal.classList.add('hidden'); }
 function renderFavoriteEditor(){
   const foods=getFoods(), favs=getFavorites();
   favoriteEditor.innerHTML=favs.map((q,i)=>{
-    const opts=foods.map(f=>`<option value="${f.id}" ${f.id===q.id?'selected':''}>${f.name}</option>`).join('');
+    const opts=foods.map(f=>`<option value="${escapeAttr(f.id)}" ${f.id===q.id?'selected':''}>${escapeHTML(f.name)}</option>`).join('');
     return `<div class="grid2" style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--line)">
       <div><label>Produkts</label><select class="favFood" data-i="${i}">${opts}</select></div>
-      <div><label>Daudzums, g</label><input class="favGrams" data-i="${i}" type="number" value="${q.g}"></div>
-      <div><label>Pogas nosaukums</label><input class="favLabel" data-i="${i}" value="${q.label||''}" placeholder="piem. 5 olas"></div>
+      <div><label>Daudzums, g</label><input class="favGrams" data-i="${i}" type="number" value="${round1(q.g)}"></div>
+      <div><label>Pogas nosaukums</label><input class="favLabel" data-i="${i}" value="${escapeAttr(q.label||'')}" placeholder="piem. 5 olas"></div>
       <div style="display:flex;align-items:end"><button class="danger" onclick="deleteFavoriteRow(${i})">Dzēst</button></div>
     </div>`;
   }).join('') || '<div class="muted">Favorītu nav.</div>';
@@ -857,7 +912,7 @@ function saveFavorites(){
   const favs=foods.map((s,i)=>({
     id:s.value,
     g:Math.max(1,+grams[i].value||100),
-    label:(labels[i].value||'').trim() || getFoods().find(f=>f.id===s.value)?.name || 'Favorīts'
+    label:cleanText(labels[i].value,120) || getFoods().find(f=>f.id===s.value)?.name || 'Favorīts'
   }));
   localStorage.setItem('favorites',JSON.stringify(favs));
   renderQuick(); closeFavorites();
@@ -915,12 +970,12 @@ async function scanLabel(){
   }catch(e){ocrStatus.textContent='OCR kļūda: '+e.message}
 }
 function fillScan(name,kcal,p,f,c,fi){
-  sName.value=name;sKcal.value=round1(kcal);sP.value=round1(p);sF.value=round1(f);sC.value=round1(c);sFi.value=round1(fi);
+  sName.value=cleanText(name,160);sKcal.value=round1(kcal);sP.value=round1(p);sF.value=round1(f);sC.value=round1(c);sFi.value=round1(fi);
   scanResult.classList.remove('hidden');
 }
 function saveScanned(addToday){
-  const f={id:'c_'+Date.now(),name:sName.value||'Skenēts produkts',kcal:+sKcal.value||0,p:+sP.value||0,f:+sF.value||0,c:+sC.value||0,fi:+sFi.value||0};
-  const cf=JSON.parse(localStorage.getItem('customFoods')||'[]');cf.push(f);localStorage.setItem('customFoods',JSON.stringify(cf));
+  const f={id:'c_'+Date.now(),name:cleanText(sName.value,160)||'Skenēts produkts',kcal:+sKcal.value||0,p:+sP.value||0,f:+sF.value||0,c:+sC.value||0,fi:+sFi.value||0};
+  const saved=safeJson(localStorage.getItem('customFoods')||'[]',[]), cf=Array.isArray(saved)?saved:[];cf.push(f);localStorage.setItem('customFoods',JSON.stringify(cf));
   if(addToday){const g=+sGrams.value||100,m=g/100,d=getDay();d.push({name:f.name,grams:g,kcal:f.kcal*m,p:f.p*m,f:f.f*m,c:f.c*m,fi:f.fi*m});saveDay(d)}
   renderFoodSelect();render();closeScanner();
 }
