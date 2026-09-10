@@ -41,7 +41,7 @@
     .food .kcal{font-weight:800}
     .pill{display:inline-block;background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:8px 10px;font-size:13px}
     .muted{color:var(--muted)}
-    .hidden{display:none}
+    .hidden{display:none!important}
     .section-title{font-size:16px;font-weight:800;margin:0 0 12px}
     .tabs{position:fixed;left:0;right:0;bottom:0;background:rgba(11,15,20,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
     .tabs .inner{max-width:720px;margin:auto;display:grid;grid-template-columns:repeat(3,1fr);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
@@ -55,6 +55,7 @@
 .quick{background:var(--chip);color:var(--text);border:1px solid var(--line);padding:12px 8px}
 .quick b{display:block;font-size:14px}.quick span{font-size:11px;color:var(--muted)}
 .scanbox{border:1px dashed var(--line);border-radius:14px;padding:12px;margin-top:12px}
+.modal.hidden{display:none!important}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:12px}
 .sheet{width:min(720px,100%);max-height:90vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px}
 .status{font-size:13px;color:var(--muted);margin-top:10px}
@@ -79,7 +80,7 @@
     </div>
 
     <div class="card">
-      <div class="between"><div class="section-title">⚡ Quick Add</div><span class="small muted">1 pieskāriens</span></div>
+      <div class="between"><div class="section-title">⭐ Favorīti</div><button class="secondary small" onclick="openFavorites()">Labot</button></div>
       <div class="quick-grid" id="quickGrid"></div>
     </div>
 
@@ -146,6 +147,24 @@
   </div>
 </div>
 
+
+
+<div id="favoritesModal" class="modal hidden">
+  <div class="sheet">
+    <div class="between">
+      <div>
+        <div class="section-title">⭐ Labot favorītus</div>
+        <div class="small muted">Maini produktu, daudzumu, dzēs vai pievieno jaunu favorītu.</div>
+      </div>
+      <button class="secondary" onclick="closeFavorites()">Aizvērt</button>
+    </div>
+    <div id="favoriteEditor" style="margin-top:14px"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="secondary" onclick="addFavoriteRow()">+ Pievienot favorītu</button>
+      <button onclick="saveFavorites()">Saglabāt favorītus</button>
+    </div>
+  </div>
+</div>
 
 <div id="scannerModal" class="modal hidden">
   <div class="sheet">
@@ -307,7 +326,8 @@ function showTab(tab){
 }
 function clearAll(){if(confirm('Tiešām dzēst VISUS aplikācijas datus?')){localStorage.clear();location.reload()}}
 
-const quickAdds=[
+
+const defaultFavorites=[
   {id:'b05',g:180,label:'B 0.5%'},
   {id:'buckwheat',g:125,label:'Griķi'},
   {id:'rice',g:125,label:'Rīsi'},
@@ -315,23 +335,84 @@ const quickAdds=[
   {id:'ricecakes',g:110,label:'Galetes'},
   {id:'banana',g:100,label:'Banāns'}
 ];
-function renderQuick(){
-  const foods=getFoods();
-  quickGrid.innerHTML=quickAdds.map((q,i)=>{
-    const f=foods.find(x=>x.id===q.id); if(!f)return '';
-    return `<button class="quick" onclick="quickAdd(${i})"><b>${q.label}</b><span>${q.g} g · ${Math.round(f.kcal*q.g/100)} kcal</span></button>`;
-  }).join('');
+
+function getFavorites(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('favorites')||'null');
+    return Array.isArray(saved) && saved.length ? saved : defaultFavorites;
+  }catch(e){ return defaultFavorites; }
 }
-function quickAdd(i){
-  const q=quickAdds[i], f=getFoods().find(x=>x.id===q.id), m=q.g/100, day=getDay();
-  day.push({name:q.label,grams:q.g,kcal:f.kcal*m,p:f.p*m,f:f.f*m,c:f.c*m,fi:f.fi*m});
+function renderQuick(){
+  const foods=getFoods(), favs=getFavorites();
+  quickGrid.innerHTML=favs.map((q,i)=>{
+    const f=foods.find(x=>x.id===q.id); if(!f)return '';
+    const label=q.label || f.name;
+    return `<button class="quick" onclick="favoriteAdd(${i})"><b>${label}</b><span>${q.g} g · ${Math.round(f.kcal*q.g/100)} kcal</span></button>`;
+  }).join('') || '<div class="muted">Nav favorītu.</div>';
+}
+function favoriteAdd(i){
+  const favs=getFavorites(), q=favs[i], f=getFoods().find(x=>x.id===q.id);
+  if(!q||!f)return;
+  const m=q.g/100, day=getDay();
+  day.push({name:q.label||f.name,grams:q.g,kcal:f.kcal*m,p:f.p*m,f:f.f*m,c:f.c*m,fi:f.fi*m});
   saveDay(day); render();
 }
+
+function openFavorites(){
+  renderFavoriteEditor();
+  favoritesModal.classList.remove('hidden');
+}
+function closeFavorites(){ favoritesModal.classList.add('hidden'); }
+
+function renderFavoriteEditor(){
+  const foods=getFoods(), favs=getFavorites();
+  favoriteEditor.innerHTML=favs.map((q,i)=>{
+    const opts=foods.map(f=>`<option value="${f.id}" ${f.id===q.id?'selected':''}>${f.name}</option>`).join('');
+    return `<div class="grid2" style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--line)">
+      <div><label>Produkts</label><select class="favFood" data-i="${i}">${opts}</select></div>
+      <div><label>Daudzums, g</label><input class="favGrams" data-i="${i}" type="number" value="${q.g}"></div>
+      <div><label>Pogas nosaukums</label><input class="favLabel" data-i="${i}" value="${q.label||''}" placeholder="piem. 5 olas"></div>
+      <div style="display:flex;align-items:end"><button class="danger" onclick="deleteFavoriteRow(${i})">Dzēst</button></div>
+    </div>`;
+  }).join('') || '<div class="muted">Favorītu nav.</div>';
+}
+function addFavoriteRow(){
+  const favs=getFavorites();
+  if(favs.length>=10){alert('Maksimums 10 favorīti.');return;}
+  const first=getFoods()[0];
+  favs.push({id:first.id,g:100,label:first.name});
+  localStorage.setItem('favorites',JSON.stringify(favs));
+  renderFavoriteEditor();
+}
+function deleteFavoriteRow(i){
+  const favs=getFavorites(); favs.splice(i,1);
+  localStorage.setItem('favorites',JSON.stringify(favs));
+  renderFavoriteEditor(); renderQuick();
+}
+function saveFavorites(){
+  const foods=[...document.querySelectorAll('.favFood')];
+  const grams=[...document.querySelectorAll('.favGrams')];
+  const labels=[...document.querySelectorAll('.favLabel')];
+  const favs=foods.map((s,i)=>({
+    id:s.value,
+    g:Math.max(1,+grams[i].value||100),
+    label:(labels[i].value||'').trim() || getFoods().find(f=>f.id===s.value)?.name || 'Favorīts'
+  }));
+  localStorage.setItem('favorites',JSON.stringify(favs));
+  renderQuick(); closeFavorites();
+}
 let qrScanner=null;
-function openScanner(){scannerModal.classList.remove('hidden')}
+function openScanner(){
+  scannerModal.classList.remove('hidden');
+  barcodeStatus.textContent='';
+  ocrStatus.textContent='';
+}
 async function closeScanner(){
+  scannerModal.classList.add('hidden');
   try{if(qrScanner)await qrScanner.stop()}catch(e){}
-  qrScanner=null; scannerModal.classList.add('hidden');
+  qrScanner=null;
+  const reader=document.getElementById('reader');
+  if(reader) reader.innerHTML='';
 }
 async function startBarcode(){
   barcodeStatus.textContent='Atļauj kameru un turi svītrkodu kadrā.';
@@ -384,6 +465,15 @@ function saveScanned(addToday){
 }
 const oldRender=render;
 render=function(){oldRender();renderQuick()};
+
+
+[scannerModal,favoritesModal].forEach(m=>{
+  m.addEventListener('click',e=>{
+    if(e.target===m){
+      if(m===scannerModal) closeScanner(); else closeFavorites();
+    }
+  });
+});
 
 renderFoodSelect(); render();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
