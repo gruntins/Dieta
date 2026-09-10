@@ -24,3 +24,8 @@ Labojums v8.2.2 — sadaļu pārslēgšana ar pirksta vilcienu:
 - Darbojas arī apakšējās sadaļu pogas.
 - Ievades lauki, atvērtie logi un svara grafika ritināšana netiek pārņemta.
 - Ekrāna pašas malas paliek pārlūka navigācijai.
+
+Labojums v8.2.3:
+- Jutīgāka sadaļu svaipošana: pietiek ar 32 px vilcienu (iepriekš 50 px).
+- Visas sadaļas aizpilda vismaz pilnu ekrāna augstumu.
+- Apakšējā izvēlne paliek pie ekrāna apakšmalas, ņemot vērā iPhone drošo zonu.
