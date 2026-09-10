@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <title>GruntinsFIT</title>
-  <!-- GruntinsFIT v8.0: trends + recent foods + search + backup + PWA + unified progress -->
+  <!-- GruntinsFIT v8.1: v8 features + swipe navigation -->
   <style>
     :root{
       --bg:#0b0f14; --card:#121821; --card2:#171f2b; --text:#f6f7f9; --muted:#9ba7b4;
@@ -103,6 +103,13 @@
 .status{font-size:13px;color:var(--muted);margin-top:10px}
 @media(max-width:600px){.quick-grid{grid-template-columns:1fr 1fr}.weight-trends{grid-template-columns:1fr}.weight-summary{grid-template-columns:1fr 1fr}.weight-summary .weight-stat:last-child{grid-column:1/-1}}
 .search-results{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}.search-chip{background:var(--chip);color:var(--text);border:1px solid var(--line);padding:8px 10px;font-weight:600}.version-badge{display:inline-block;background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 9px;font-size:12px;color:var(--muted)}
+
+/* v8.1 — swipe navigation */
+.view-swipe-in-left{animation:viewSwipeInLeft .18s ease-out}
+.view-swipe-in-right{animation:viewSwipeInRight .18s ease-out}
+@keyframes viewSwipeInLeft{from{opacity:.55;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
+@keyframes viewSwipeInRight{from{opacity:.55;transform:translateX(-18px)}to{opacity:1;transform:translateX(0)}}
+@media (prefers-reduced-motion:reduce){.view-swipe-in-left,.view-swipe-in-right{animation:none}}
 </style>
 </head>
 <body>
@@ -268,7 +275,7 @@
       <button onclick="saveTargets()">Saglabāt mērķus</button>
     </div>
     <div class="card">
-      <div class="between"><div class="section-title">Dati un rezerves kopija</div><span class="version-badge">GruntinsFIT v8.0</span></div>
+      <div class="between"><div class="section-title">Dati un rezerves kopija</div><span class="version-badge">GruntinsFIT v8.1</span></div>
       <div class="row">
         <button class="secondary" onclick="exportBackup()">⬇️ Eksportēt backup</button>
         <button class="secondary" onclick="document.getElementById('backupFile').click()">⬆️ Importēt backup</button>
@@ -377,7 +384,7 @@
 </div>
 
 <script>
-const APP_VERSION='8.0';
+const APP_VERSION='8.1';
 const defaultTargets={kcal:2100,p:156,f:47,c:263,fi:30};
 const baseFoods=[
   {id:'buckwheat',name:'Griķi (sausi)',kcal:343.2,p:13.28,f:3.44,c:71.52,fi:10},
@@ -540,15 +547,53 @@ function renderWeek(){
   <div class="avg"><span>🌿 Šķiedrvielas</span><b>${round1(a.fi)} / ${g.fi} g</b></div>
   <div class="small muted" style="margin-top:12px">Dati tiek rēķināti tikai no dienām, kurās ir vismaz viens ieraksts.</div>`;
 }
-function showTab(tab){
-  ['today','week','history','weight','settings'].forEach(x=>{
-    document.getElementById(x+'View').classList.toggle('hidden',x!==tab);
+const TAB_ORDER=['today','week','history','weight','settings'];
+let activeTab='today';
+function showTab(tab,swipeDirection=0){
+  if(!TAB_ORDER.includes(tab))return;
+  TAB_ORDER.forEach(x=>{
+    const view=document.getElementById(x+'View');
+    view.classList.toggle('hidden',x!==tab);
+    view.classList.remove('view-swipe-in-left','view-swipe-in-right');
     document.getElementById('tab'+x[0].toUpperCase()+x.slice(1)).classList.toggle('active',x===tab)
   });
+  activeTab=tab;
   if(tab==='week')renderWeek();
   if(tab==='history'){renderCalendar();renderHistoryDay(selectedHistoryDate)}
   if(tab==='weight')renderWeight();
+  if(swipeDirection){
+    const view=document.getElementById(tab+'View');
+    // Force a fresh animation even when swiping quickly between tabs.
+    void view.offsetWidth;
+    view.classList.add(swipeDirection>0?'view-swipe-in-left':'view-swipe-in-right');
+    window.setTimeout(()=>view.classList.remove('view-swipe-in-left','view-swipe-in-right'),220);
+  }
 }
+
+// Swipe horizontally anywhere in the app, except on controls or horizontally scrollable widgets.
+let swipeStartX=0, swipeStartY=0, swipeStartTime=0, swipeBlocked=false;
+const appRoot=document.querySelector('.app');
+function swipeHasOpenModal(){return [...document.querySelectorAll('.modal')].some(m=>!m.classList.contains('hidden'))}
+appRoot.addEventListener('touchstart',e=>{
+  if(e.touches.length!==1||swipeHasOpenModal()){swipeBlocked=true;return}
+  const t=e.target;
+  swipeBlocked=!!t.closest('input,select,textarea,button,a,.calendar,.weight-chart-wrap,.search-results');
+  if(swipeBlocked)return;
+  const touch=e.touches[0];
+  swipeStartX=touch.clientX; swipeStartY=touch.clientY; swipeStartTime=Date.now();
+},{passive:true});
+appRoot.addEventListener('touchend',e=>{
+  if(swipeBlocked||!e.changedTouches.length){swipeBlocked=false;return}
+  const touch=e.changedTouches[0];
+  const dx=touch.clientX-swipeStartX, dy=touch.clientY-swipeStartY;
+  const elapsed=Date.now()-swipeStartTime;
+  swipeBlocked=false;
+  if(elapsed>900||Math.abs(dx)<55||Math.abs(dx)<Math.abs(dy)*1.25)return;
+  const current=TAB_ORDER.indexOf(activeTab);
+  const next=dx<0?current+1:current-1;
+  if(next<0||next>=TAB_ORDER.length)return;
+  showTab(TAB_ORDER[next],dx<0?1:-1);
+},{passive:true});
 function appStorageKeys(){
   return Object.keys(localStorage).filter(k=>['targets','customFoods','favorites','weight_entries',RECENT_KEY].includes(k)||/^day_\d{4}-\d{2}-\d{2}$/.test(k));
 }
