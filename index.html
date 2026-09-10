@@ -44,7 +44,7 @@
     .hidden{display:none!important}
     .section-title{font-size:16px;font-weight:800;margin:0 0 12px}
     .tabs{position:fixed;left:0;right:0;bottom:0;background:rgba(11,15,20,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
-    .tabs .inner{max-width:720px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+    .tabs .inner{max-width:720px;margin:auto;display:grid;grid-template-columns:repeat(5,1fr);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
     .tabs button{background:transparent;color:var(--muted);padding:10px 4px}
     .tabs button.active{color:var(--accent)}
     .small{font-size:12px}
@@ -68,6 +68,14 @@
 .food-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:6px}
 .food-actions button{padding:7px 10px}
 .notice{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px;font-size:13px}
+.weight-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.weight-stat{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px}
+.weight-stat .v{font-size:22px;font-weight:800;margin-top:4px}
+.weight-chart-wrap{overflow-x:auto}
+#weightChart{width:100%;min-width:560px;height:260px;display:block}
+.weight-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.weight-row:last-child{border-bottom:0}
+
     @media(max-width:600px){.grid5{grid-template-columns:1fr 1fr}.grid5 .metric:last-child{grid-column:1/-1}.grid2{grid-template-columns:1fr}}
   
 .quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -177,6 +185,45 @@
       </div>
       <div id="historyMetrics" class="grid5" style="margin-bottom:12px"></div>
       <div id="historyList"><div class="muted">Izvēlies dienu kalendārā.</div></div>
+    </div>
+  </div>
+
+
+  <div id="weightView" class="hidden">
+    <h1>Svars</h1>
+    <div class="sub">Pievieno svaru konkrētā datumā un seko svara izmaiņu trajektorijai.</div>
+
+    <div class="card">
+      <div class="section-title">➕ Pievienot svaru</div>
+      <div class="grid2">
+        <div>
+          <label>Datums</label>
+          <input id="weightDate" type="date">
+        </div>
+        <div>
+          <label>Svars, kg</label>
+          <input id="weightValue" type="number" inputmode="decimal" step="0.1" placeholder="75.0">
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <button onclick="addWeightEntry()">Saglabāt svaru</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">📈 Trajektorija</div>
+      <div class="weight-summary" id="weightSummary"></div>
+      <div class="weight-chart-wrap" style="margin-top:14px">
+        <svg id="weightChart" viewBox="0 0 700 260" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="between">
+        <div class="section-title">Ieraksti</div>
+        <div class="pill" id="weightCount">0 ieraksti</div>
+      </div>
+      <div id="weightList"><div class="muted">Vēl nav svara ierakstu.</div></div>
     </div>
   </div>
 
@@ -292,6 +339,7 @@
     <button id="tabToday" class="active" onclick="showTab('today')">Šodien</button>
     <button id="tabWeek" onclick="showTab('week')">7 dienas</button>
     <button id="tabHistory" onclick="showTab('history')">Vēsture</button>
+    <button id="tabWeight" onclick="showTab('weight')">Svars</button>
     <button id="tabSettings" onclick="showTab('settings')">Iestatījumi</button>
   </div>
 </div>
@@ -395,15 +443,131 @@ function renderWeek(){
   <div class="small muted" style="margin-top:12px">Dati tiek rēķināti tikai no dienām, kurās ir vismaz viens ieraksts.</div>`;
 }
 function showTab(tab){
-  ['today','week','history','settings'].forEach(x=>{
+  ['today','week','history','weight','settings'].forEach(x=>{
     document.getElementById(x+'View').classList.toggle('hidden',x!==tab);
     document.getElementById('tab'+x[0].toUpperCase()+x.slice(1)).classList.toggle('active',x===tab)
   });
   if(tab==='week')renderWeek();
   if(tab==='history'){renderCalendar();renderHistoryDay(selectedHistoryDate)}
+  if(tab==='weight')renderWeight();
 }
 function clearAll(){if(confirm('Tiešām dzēst VISUS aplikācijas datus?')){localStorage.clear();location.reload()}}
 
+
+
+// ===== DIĒTA v5: svara uzskaite =====
+function getWeights(){
+  try{
+    const x=JSON.parse(localStorage.getItem('weight_entries')||'[]');
+    return Array.isArray(x)?x:[];
+  }catch(e){return []}
+}
+function saveWeights(x){
+  localStorage.setItem('weight_entries',JSON.stringify(x));
+}
+function addWeightEntry(){
+  const date=weightDate.value;
+  const value=+weightValue.value;
+  if(!date){alert('Izvēlies datumu.');return;}
+  if(!value || value<30 || value>300){alert('Ievadi korektu svaru kg.');return;}
+  const arr=getWeights();
+  const existing=arr.find(x=>x.date===date);
+  if(existing) existing.weight=value;
+  else arr.push({date,weight:value});
+  arr.sort((a,b)=>a.date.localeCompare(b.date));
+  saveWeights(arr);
+  weightValue.value='';
+  renderWeight();
+}
+function deleteWeightEntry(date){
+  if(!confirm('Dzēst šo svara ierakstu?'))return;
+  saveWeights(getWeights().filter(x=>x.date!==date));
+  renderWeight();
+}
+function editWeightEntry(date){
+  const arr=getWeights();
+  const x=arr.find(e=>e.date===date);
+  if(!x)return;
+  const v=prompt('Jaunais svars, kg:',x.weight);
+  if(v===null)return;
+  const n=+String(v).replace(',','.');
+  if(!n || n<30 || n>300){alert('Nederīgs svars.');return;}
+  x.weight=n;
+  saveWeights(arr);
+  renderWeight();
+}
+function renderWeight(){
+  const arr=getWeights().sort((a,b)=>a.date.localeCompare(b.date));
+  weightCount.textContent=`${arr.length} ieraksti`;
+  if(!weightDate.value) weightDate.value=keyDate();
+
+  if(!arr.length){
+    weightSummary.innerHTML=`
+      <div class="weight-stat"><div class="muted small">Pirmais</div><div class="v">—</div></div>
+      <div class="weight-stat"><div class="muted small">Pašreizējais</div><div class="v">—</div></div>
+      <div class="weight-stat"><div class="muted small">Izmaiņa</div><div class="v">—</div></div>`;
+    weightList.innerHTML='<div class="muted">Vēl nav svara ierakstu.</div>';
+    weightChart.innerHTML='';
+    return;
+  }
+
+  const first=arr[0].weight, last=arr[arr.length-1].weight, diff=last-first;
+  weightSummary.innerHTML=`
+    <div class="weight-stat"><div class="muted small">Pirmais</div><div class="v">${first.toFixed(1)} kg</div></div>
+    <div class="weight-stat"><div class="muted small">Pašreizējais</div><div class="v">${last.toFixed(1)} kg</div></div>
+    <div class="weight-stat"><div class="muted small">Izmaiņa</div><div class="v">${diff>0?'+':''}${diff.toFixed(1)} kg</div></div>`;
+
+  weightList.innerHTML=[...arr].reverse().map(x=>{
+    const d=new Date(x.date+'T12:00:00');
+    const ds=d.toLocaleDateString('lv-LV',{day:'2-digit',month:'2-digit',year:'numeric'});
+    return `<div class="weight-row">
+      <div><b>${x.weight.toFixed(1)} kg</b><div class="small muted">${ds}</div></div>
+      <button class="secondary small" onclick="editWeightEntry('${x.date}')">Labot</button>
+      <button class="secondary small" onclick="deleteWeightEntry('${x.date}')">Dzēst</button>
+    </div>`;
+  }).join('');
+
+  renderWeightChart(arr);
+}
+function renderWeightChart(arr){
+  const svg=weightChart;
+  if(!arr.length){svg.innerHTML='';return;}
+  const W=700,H=260,padL=48,padR=18,padT=18,padB=38;
+  const vals=arr.map(x=>x.weight);
+  let min=Math.min(...vals), max=Math.max(...vals);
+  if(min===max){min-=1;max+=1}
+  else{
+    const pad=Math.max(0.5,(max-min)*0.15);
+    min-=pad;max+=pad;
+  }
+  const xFor=i=>arr.length===1?(padL+(W-padL-padR)/2):padL+i*(W-padL-padR)/(arr.length-1);
+  const yFor=v=>padT+(max-v)*(H-padT-padB)/(max-min);
+
+  let parts=[];
+  // horizontal grid + labels
+  for(let i=0;i<5;i++){
+    const v=max-(max-min)*i/4;
+    const y=yFor(v);
+    parts.push(`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="currentColor" opacity=".12" />`);
+    parts.push(`<text x="${padL-8}" y="${y+4}" text-anchor="end" fill="currentColor" opacity=".65" font-size="12">${v.toFixed(1)}</text>`);
+  }
+
+  const points=arr.map((x,i)=>`${xFor(i)},${yFor(x.weight)}`).join(' ');
+  if(arr.length>1){
+    parts.push(`<polyline points="${points}" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`);
+  }
+
+  arr.forEach((x,i)=>{
+    const cx=xFor(i), cy=yFor(x.weight);
+    parts.push(`<circle cx="${cx}" cy="${cy}" r="4.5" fill="currentColor"/>`);
+    if(arr.length<=10 || i===0 || i===arr.length-1){
+      const d=new Date(x.date+'T12:00:00');
+      const label=d.toLocaleDateString('lv-LV',{day:'2-digit',month:'2-digit'});
+      parts.push(`<text x="${cx}" y="${H-14}" text-anchor="middle" fill="currentColor" opacity=".65" font-size="11">${label}</text>`);
+    }
+  });
+  svg.innerHTML=parts.join('');
+}
 
 // ===== DIĒTA v4: rediģēšana, vēsture, gudrie ieteikumi =====
 let editContext={date:keyDate(),index:-1};

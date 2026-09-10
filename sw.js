@@ -1,4 +1,4 @@
-const CACHE='dieta-v4';
+const CACHE='dieta-v5';
 const ASSETS=['./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install',e=>{
