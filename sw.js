@@ -1,4 +1,4 @@
-const CACHE='gruntinsfit-v8-visual-0';
+const CACHE='gruntinsfit-v8-2';
 const CORE=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install',e=>{
