@@ -8,13 +8,13 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <title>GruntinsFIT</title>
-  <!-- GruntinsFIT v7: XSS hardening + weight UI/decimal fixes -->
+  <!-- GruntinsFIT v7.1: XSS hardening + iOS weight-date layout fix -->
   <style>
     :root{
       --bg:#0b0f14; --card:#121821; --card2:#171f2b; --text:#f6f7f9; --muted:#9ba7b4;
       --accent:#55d187; --warn:#f4c15d; --bad:#ff7a7a; --line:#263140; --chip:#1d2633;
     }
-    *{box-sizing:border-box}
+    *,*::before,*::after{box-sizing:border-box}
     body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
     .app{max-width:720px;margin:0 auto;padding:20px 16px 110px}
     h1{font-size:30px;letter-spacing:.5px;margin:6px 0 4px}
@@ -79,7 +79,8 @@
 .weight-row:last-child{border-bottom:0}
 .weight-input-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;width:100%}
 .weight-field{min-width:0;width:100%}
-#weightDate,#weightValue{display:block;width:100%;min-width:0;max-width:100%;text-align:center}
+#weightDate,#weightValue{display:block;width:100%;min-width:0;max-width:100%;text-align:center;box-sizing:border-box}
+#weightDate{inline-size:100%;max-inline-size:100%;min-inline-size:0}
 #weightDate::-webkit-date-and-time-value{text-align:center}
 #weightDate::-webkit-datetime-edit{display:block;text-align:center;width:100%}
 
