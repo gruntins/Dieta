@@ -4,11 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="GruntinsFIT" />
   <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; form-action 'self'">
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <title>GruntinsFIT</title>
-  <!-- GruntinsFIT v7.1: XSS hardening + iOS weight-date layout fix -->
+  <!-- GruntinsFIT v8.0: trends + recent foods + search + backup + PWA + unified progress -->
   <style>
     :root{
       --bg:#0b0f14; --card:#121821; --card2:#171f2b; --text:#f6f7f9; --muted:#9ba7b4;
@@ -35,8 +38,11 @@
     .metric .value{font-size:20px;font-weight:800;margin-top:3px}
     .metric .remain{font-size:11px;color:var(--muted);margin-top:2px}
     .bar{height:8px;background:#25303d;border-radius:99px;overflow:hidden;margin-top:8px}
-    .fill{height:100%;background:var(--accent);width:0}
-    .fill.warn{background:var(--warn)} .fill.bad{background:var(--bad)}
+    .fill{height:100%;width:0;background:var(--accent)}
+    .fill.low{background:var(--bad)}
+    .fill.mid{background:var(--warn)}
+    .fill.ok{background:var(--accent)}
+    .fill.over{background:#f59e0b}
     .food{display:grid;grid-template-columns:1fr auto;gap:8px;padding:11px 0;border-bottom:1px solid var(--line)}
     .food:last-child{border-bottom:0}
     .food .meta{font-size:12px;color:var(--muted);margin-top:3px}
@@ -71,6 +77,7 @@
 .food-actions button{padding:7px 10px}
 .notice{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px;font-size:13px}
 .weight-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.weight-trends{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
 .weight-stat{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px}
 .weight-stat .v{font-size:22px;font-weight:800;margin-top:4px}
 .weight-chart-wrap{overflow-x:auto}
@@ -94,7 +101,8 @@
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:12px}
 .sheet{width:min(720px,100%);max-height:90vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px}
 .status{font-size:13px;color:var(--muted);margin-top:10px}
-@media(max-width:600px){.quick-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.quick-grid{grid-template-columns:1fr 1fr}.weight-trends{grid-template-columns:1fr}.weight-summary{grid-template-columns:1fr 1fr}.weight-summary .weight-stat:last-child{grid-column:1/-1}}
+.search-results{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}.search-chip{background:var(--chip);color:var(--text);border:1px solid var(--line);padding:8px 10px;font-weight:600}.version-badge{display:inline-block;background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 9px;font-size:12px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -120,8 +128,17 @@
     </div>
 
     <div class="card">
+      <div class="between"><div class="section-title">🕘 Nesen lietotie</div><div class="small muted">Ātrai atkārtotai pievienošanai</div></div>
+      <div class="quick-grid" id="recentGrid"></div>
+    </div>
+
+    <div class="card">
       <div class="section-title">Pievienot ēdienu</div>
-      <label>Produkts</label>
+      <label>Meklēt produktu</label>
+      <input id="foodSearch" type="search" autocomplete="off" placeholder="Raksti, piem. rīsi" oninput="filterFoodSearch()" />
+      <div id="foodSearchResults" class="search-results"></div>
+      <div style="height:10px"></div>
+      <label>Produkts (pilnais saraksts)</label>
       <select id="foodSelect"></select>
       <div style="height:10px"></div>
       <label>Daudzums, g</label>
@@ -221,6 +238,7 @@
     <div class="card">
       <div class="section-title">📈 Trajektorija</div>
       <div class="weight-summary" id="weightSummary"></div>
+      <div class="weight-trends" id="weightTrends"></div>
       <div class="weight-chart-wrap" style="margin-top:14px">
         <svg id="weightChart" viewBox="0 0 700 260" preserveAspectRatio="none"></svg>
       </div>
@@ -250,9 +268,15 @@
       <button onclick="saveTargets()">Saglabāt mērķus</button>
     </div>
     <div class="card">
-      <div class="section-title">Dati</div>
+      <div class="between"><div class="section-title">Dati un rezerves kopija</div><span class="version-badge">GruntinsFIT v8.0</span></div>
+      <div class="row">
+        <button class="secondary" onclick="exportBackup()">⬇️ Eksportēt backup</button>
+        <button class="secondary" onclick="document.getElementById('backupFile').click()">⬆️ Importēt backup</button>
+        <input id="backupFile" class="hidden" type="file" accept="application/json,.json" onchange="importBackup(event)">
+      </div>
+      <div id="backupStatus" class="small muted" style="margin-top:10px">Dati glabājas šajā pārlūkā / ierīcē. Backup ļauj tos pārnest vai atjaunot.</div>
+      <div style="height:14px"></div>
       <button class="danger" onclick="clearAll()">Dzēst visus lokālos datus</button>
-      <div class="small muted" style="margin-top:10px">Dati glabājas tikai šajā pārlūkā / ierīcē.</div>
     </div>
   </div>
 </div>
@@ -353,6 +377,7 @@
 </div>
 
 <script>
+const APP_VERSION='8.0';
 const defaultTargets={kcal:2100,p:156,f:47,c:263,fi:30};
 const baseFoods=[
   {id:'buckwheat',name:'Griķi (sausi)',kcal:343.2,p:13.28,f:3.44,c:71.52,fi:10},
@@ -427,18 +452,36 @@ function saveDay(x,dateKey=keyDate()){localStorage.setItem('day_'+dateKey,JSON.s
 function round1(x){return Math.round(finiteNumber(x)*10)/10}
 
 function renderFoodSelect(){
-  const s=document.getElementById('foodSelect'); s.innerHTML='';
-  getFoods().forEach(f=>{const o=document.createElement('option');o.value=f.id;o.textContent=f.name;s.appendChild(o)})
+  const s=document.getElementById('foodSelect'); if(!s)return;
+  const selected=s.value; s.innerHTML='';
+  getFoods().forEach(f=>{const o=document.createElement('option');o.value=f.id;o.textContent=f.name;s.appendChild(o)});
+  if([...s.options].some(o=>o.value===selected))s.value=selected;
+  filterFoodSearch();
+}
+function filterFoodSearch(){
+  const input=document.getElementById('foodSearch'), box=document.getElementById('foodSearchResults');
+  if(!input||!box)return;
+  const q=cleanText(input.value,80).toLocaleLowerCase('lv-LV');
+  if(!q){box.innerHTML='';return;}
+  const matches=getFoods().filter(f=>f.name.toLocaleLowerCase('lv-LV').includes(q)).slice(0,8);
+  box.innerHTML=matches.length?matches.map(f=>`<button class="search-chip" type="button" onclick="chooseSearchedFood('${escapeAttr(f.id)}')">${escapeHTML(f.name)}</button>`).join(''):'<span class="small muted">Nav atrasts.</span>';
+}
+function chooseSearchedFood(id){
+  const s=document.getElementById('foodSelect');
+  if([...s.options].some(o=>o.value===id))s.value=id;
+  foodSearch.value=s.options[s.selectedIndex]?.textContent||'';
+  foodSearchResults.innerHTML='';
+  grams.focus();
 }
 function totals(day=getDay()){
   return day.reduce((a,x)=>({kcal:a.kcal+x.kcal,p:a.p+x.p,f:a.f+x.f,c:a.c+x.c,fi:a.fi+x.fi}),{kcal:0,p:0,f:0,c:0,fi:0})
 }
 function metricCard(name,val,target,unit){
   const pct=target?val/target*100:0;
-  let cls=pct>100?'bad':pct>70?'':'warn';
-  let remain=target-val;
-  let remtxt=remain>=0?`paliek ${round1(remain)} ${unit}`:`+${round1(-remain)} ${unit}`;
-  return `<div class="metric"><div class="name">${name}</div><div class="value">${round1(val)} / ${target}</div><div class="remain">${remtxt} · ${Math.round(pct)}%</div><div class="bar"><div class="fill ${cls}" style="width:${Math.min(pct,100)}%"></div></div></div>`
+  const cls=pct<=30?'low':pct<=70?'mid':pct<=100?'ok':'over';
+  const remain=target-val;
+  const remtxt=remain>=0?`paliek ${round1(remain)} ${unit}`:`pāri ${round1(-remain)} ${unit}`;
+  return `<div class="metric"><div class="name">${name}</div><div class="value">${round1(val)}/${target}</div><div class="remain">(${remtxt}) · ${Math.round(pct)}%</div><div class="bar"><div class="fill ${cls}" style="width:${Math.min(Math.max(pct,0),100)}%"></div></div></div>`
 }
 function render(){
   document.getElementById('todayLabel').textContent=new Date().toLocaleDateString('lv-LV',{weekday:'long',day:'numeric',month:'long'});
@@ -458,12 +501,12 @@ function render(){
   renderWeek(); loadTargetInputs(); renderSuggestions();
 }
 function addFood(){
-  const id=document.getElementById('foodSelect').value, grams=parseFloat(document.getElementById('grams').value);
+  const id=document.getElementById('foodSelect').value, grams=parseLocalizedNumber(document.getElementById('grams').value);
   if(!grams||grams<=0)return;
   const f=getFoods().find(x=>x.id===id), m=grams/100;
   const day=getDay();
   day.push({name:f.name,grams,kcal:f.kcal*m,p:f.p*m,f:f.f*m,c:f.c*m,fi:f.fi*m});
-  saveDay(day); document.getElementById('grams').value=''; render();
+  saveDay(day); rememberRecent(id,grams); document.getElementById('grams').value=''; render();
 }
 function removeFood(i){const d=getDay();d.splice(i,1);saveDay(d);render()}
 function showCustom(){document.getElementById('customCard').classList.toggle('hidden')}
@@ -505,6 +548,29 @@ function showTab(tab){
   if(tab==='week')renderWeek();
   if(tab==='history'){renderCalendar();renderHistoryDay(selectedHistoryDate)}
   if(tab==='weight')renderWeight();
+}
+function appStorageKeys(){
+  return Object.keys(localStorage).filter(k=>['targets','customFoods','favorites','weight_entries',RECENT_KEY].includes(k)||/^day_\d{4}-\d{2}-\d{2}$/.test(k));
+}
+function exportBackup(){
+  const data={app:'GruntinsFIT',version:APP_VERSION,exportedAt:new Date().toISOString(),storage:{}};
+  appStorageKeys().forEach(k=>data.storage[k]=localStorage.getItem(k));
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`GruntinsFIT_backup_${keyDate()}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  const s=document.getElementById('backupStatus');if(s)s.textContent='Backup fails izveidots.';
+}
+async function importBackup(event){
+  const file=event.target.files?.[0];if(!file)return;
+  try{
+    const parsed=JSON.parse(await file.text());
+    if(parsed?.app!=='GruntinsFIT'||!parsed.storage||typeof parsed.storage!=='object')throw new Error('Fails nav GruntinsFIT backup.');
+    if(!confirm('Importēt backup? Pašreizējie GruntinsFIT dati tiks aizvietoti ar backup saturu.')){event.target.value='';return;}
+    appStorageKeys().forEach(k=>localStorage.removeItem(k));
+    for(const [k,v] of Object.entries(parsed.storage)){
+      if(['targets','customFoods','favorites','weight_entries',RECENT_KEY].includes(k)||/^day_\d{4}-\d{2}-\d{2}$/.test(k)){if(typeof v==='string')localStorage.setItem(k,v)}
+    }
+    alert('Backup importēts. Aplikācija tiks pārlādēta.');location.reload();
+  }catch(e){alert('Backup neizdevās importēt: '+e.message)}finally{event.target.value=''}
 }
 function clearAll(){if(confirm('Tiešām dzēst VISUS aplikācijas datus?')){localStorage.clear();location.reload()}}
 
@@ -551,6 +617,32 @@ function editWeightEntry(date){
   saveWeights(arr);
   renderWeight();
 }
+function averageWeight(entries){return entries.length?entries.reduce((s,x)=>s+x.weight,0)/entries.length:NaN}
+function entriesSince(arr,days){
+  if(!arr.length)return [];
+  const end=new Date(arr[arr.length-1].date+'T12:00:00');
+  const start=new Date(end);start.setDate(start.getDate()-(days-1));
+  return arr.filter(x=>new Date(x.date+'T12:00:00')>=start);
+}
+function weightDeltaForDays(arr,days){
+  const subset=entriesSince(arr,days);
+  if(subset.length<2)return NaN;
+  return subset[subset.length-1].weight-subset[0].weight;
+}
+function weeklyTrend(arr){
+  const subset=entriesSince(arr,30);
+  if(subset.length<2)return NaN;
+  const x0=new Date(subset[0].date+'T12:00:00').getTime();
+  const xs=subset.map(e=>(new Date(e.date+'T12:00:00').getTime()-x0)/86400000);
+  const ys=subset.map(e=>e.weight);
+  const xm=xs.reduce((a,b)=>a+b,0)/xs.length, ym=ys.reduce((a,b)=>a+b,0)/ys.length;
+  const den=xs.reduce((s,x)=>s+(x-xm)**2,0);
+  if(!den)return NaN;
+  const slope=xs.reduce((s,x,i)=>s+(x-xm)*(ys[i]-ym),0)/den;
+  return slope*7;
+}
+function fmtSigned(n){return Number.isFinite(n)?`${n>0?'+':''}${n.toFixed(2)} kg`:'—'}
+
 function renderWeight(){
   const arr=getWeights().sort((a,b)=>a.date.localeCompare(b.date));
   weightCount.textContent=`${arr.length} ieraksti`;
@@ -561,6 +653,7 @@ function renderWeight(){
       <div class="weight-stat"><div class="muted small">Pirmais</div><div class="v">—</div></div>
       <div class="weight-stat"><div class="muted small">Pašreizējais</div><div class="v">—</div></div>
       <div class="weight-stat"><div class="muted small">Izmaiņa</div><div class="v">—</div></div>`;
+    weightTrends.innerHTML='';
     weightList.innerHTML='<div class="muted">Vēl nav svara ierakstu.</div>';
     weightChart.innerHTML='';
     return;
@@ -571,6 +664,12 @@ function renderWeight(){
     <div class="weight-stat"><div class="muted small">Pirmais</div><div class="v">${first.toFixed(1)} kg</div></div>
     <div class="weight-stat"><div class="muted small">Pašreizējais</div><div class="v">${last.toFixed(1)} kg</div></div>
     <div class="weight-stat"><div class="muted small">Izmaiņa</div><div class="v">${diff>0?'+':''}${diff.toFixed(1)} kg</div></div>`;
+  const avg7=averageWeight(entriesSince(arr,7));
+  const d7=weightDeltaForDays(arr,7), d30=weightDeltaForDays(arr,30), trend=weeklyTrend(arr);
+  weightTrends.innerHTML=`
+    <div class="weight-stat"><div class="muted small">7 dienu vidējais</div><div class="v">${Number.isFinite(avg7)?avg7.toFixed(2)+' kg':'—'}</div></div>
+    <div class="weight-stat"><div class="muted small">Izmaiņa 7 / 30 dienās</div><div class="v">${fmtSigned(d7)} / ${fmtSigned(d30)}</div></div>
+    <div class="weight-stat"><div class="muted small">Temps (30 d. trends)</div><div class="v">${Number.isFinite(trend)?`${trend>0?'+':''}${trend.toFixed(2)} kg/ned.`:'—'}</div></div>`;
 
   weightList.innerHTML=[...arr].reverse().map(x=>{
     const d=new Date(x.date+'T12:00:00');
@@ -840,9 +939,30 @@ function addSuggestion(index){
     const m=z.g/100;
     day.push({name:f.name,grams:z.g,kcal:f.kcal*m,p:f.p*m,f:f.f*m,c:f.c*m,fi:f.fi*m});
   });
-  saveDay(day);render();
+  saveDay(day);items.forEach(z=>rememberRecent(z.id,z.g));render();
 }
 
+
+const RECENT_KEY='recent_foods_v8';
+function getRecentFoods(){
+  const x=safeJson(localStorage.getItem(RECENT_KEY)||'[]',[]);
+  return Array.isArray(x)?x.map(r=>({id:cleanText(r?.id,80),g:Math.max(1,finiteNumber(r?.g,100)),ts:finiteNumber(r?.ts,0)})).filter(r=>r.id):[];
+}
+function rememberRecent(id,g){
+  id=cleanText(id,80); if(!id)return;
+  const arr=getRecentFoods().filter(x=>x.id!==id);
+  arr.unshift({id,g:Math.max(1,finiteNumber(g,100)),ts:Date.now()});
+  localStorage.setItem(RECENT_KEY,JSON.stringify(arr.slice(0,6)));
+}
+function renderRecent(){
+  const box=document.getElementById('recentGrid'); if(!box)return;
+  const foods=getFoods(), recent=getRecentFoods();
+  box.innerHTML=recent.map((r,i)=>{const f=foods.find(x=>x.id===r.id);if(!f)return '';return `<button class="quick" onclick="recentAdd(${i})"><b>${escapeHTML(f.name)}</b><span>${round1(r.g)} g · ${Math.round(f.kcal*r.g/100)} kcal</span></button>`}).join('')||'<div class="muted">Vēl nav nesen lietotu produktu.</div>';
+}
+function recentAdd(i){
+  const r=getRecentFoods()[i], f=getFoods().find(x=>x.id===r?.id);if(!r||!f)return;
+  const m=r.g/100,d=getDay();d.push({name:f.name,grams:r.g,kcal:f.kcal*m,p:f.p*m,f:f.f*m,c:f.c*m,fi:f.fi*m});saveDay(d);rememberRecent(f.id,r.g);render();
+}
 
 const defaultFavorites=[
   {id:'b05',g:180,label:'B 0.5%'},
@@ -872,7 +992,7 @@ function favoriteAdd(i){
   if(!q||!f)return;
   const m=q.g/100, day=getDay();
   day.push({name:q.label||f.name,grams:q.g,kcal:f.kcal*m,p:f.p*m,f:f.f*m,c:f.c*m,fi:f.fi*m});
-  saveDay(day); render();
+  saveDay(day); rememberRecent(q.id,q.g); render();
 }
 
 function openFavorites(){
@@ -977,11 +1097,11 @@ function fillScan(name,kcal,p,f,c,fi){
 function saveScanned(addToday){
   const f={id:'c_'+Date.now(),name:cleanText(sName.value,160)||'Skenēts produkts',kcal:+sKcal.value||0,p:+sP.value||0,f:+sF.value||0,c:+sC.value||0,fi:+sFi.value||0};
   const saved=safeJson(localStorage.getItem('customFoods')||'[]',[]), cf=Array.isArray(saved)?saved:[];cf.push(f);localStorage.setItem('customFoods',JSON.stringify(cf));
-  if(addToday){const g=+sGrams.value||100,m=g/100,d=getDay();d.push({name:f.name,grams:g,kcal:f.kcal*m,p:f.p*m,f:f.f*m,c:f.c*m,fi:f.fi*m});saveDay(d)}
+  if(addToday){const g=parseLocalizedNumber(sGrams.value)||100,m=g/100,d=getDay();d.push({name:f.name,grams:g,kcal:f.kcal*m,p:f.p*m,f:f.f*m,c:f.c*m,fi:f.fi*m});saveDay(d);rememberRecent(f.id,g)}
   renderFoodSelect();render();closeScanner();
 }
 const oldRender=render;
-render=function(){oldRender();renderQuick()};
+render=function(){oldRender();renderQuick();renderRecent()};
 
 
 [scannerModal,favoritesModal,editFoodModal].forEach(m=>{
@@ -995,7 +1115,7 @@ render=function(){oldRender();renderQuick()};
 });
 
 renderFoodSelect(); render();
-if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').then(r=>r.update()).catch(()=>{})}
 </script>
 </body>
 </html>
