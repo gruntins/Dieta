@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#f5f7f9" id="themeColorMeta" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="GruntinsFIT" />
+  <meta name="apple-mobile-web-app-title" content="MACROFIT" />
   <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; form-action 'self'">
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <title>GruntinsFIT</title>
-  <!-- GruntinsFIT v8.2: v8 Visual + Dark mode + Macro/BMI Calculator -->
+  <title>MACROFIT</title>
+  <!-- MACROFIT v8.5: v8.3 + product naming + full dark mode + scheduled theme -->
   <style>
 :root{
   --bg:#f5f7f9;--card:#ffffff;--card2:#f8fafb;--text:#101820;--muted:#687583;
@@ -29,29 +29,34 @@ html[data-theme="dark"]{
 html{background:var(--bg)}
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;background:linear-gradient(180deg,var(--card) 0,var(--card2) 420px,var(--bg) 100%);color:var(--text);-webkit-font-smoothing:antialiased;transition:background .22s ease,color .22s ease}
 .app{max-width:720px;margin:0 auto;padding:calc(22px + env(safe-area-inset-top)) 16px 112px}
-.brand-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.brand-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}.brand-wrap{display:flex;align-items:center;gap:11px}.brand-logo{width:42px;height:42px;border-radius:12px;display:block;object-fit:cover;box-shadow:0 5px 16px rgba(0,0,0,.12)}
 .brand{font-size:34px;font-weight:900;letter-spacing:-1.5px}.brand span{color:var(--accent)}
-.brand-sub{font-size:13px;color:var(--muted);font-weight:600;margin-top:2px}.version-badge{display:inline-block;background:#eef1f4;border:0;border-radius:999px;padding:5px 9px;font-size:11px;color:#52606d;margin-left:6px;vertical-align:middle}
+.brand-sub{font-size:13px;color:var(--muted);font-weight:600;margin-top:2px}.version-badge{display:inline-block;background:var(--chip);border:0;border-radius:999px;padding:5px 9px;font-size:11px;color:var(--muted);margin-left:6px;vertical-align:middle}
 h1{font-size:36px;letter-spacing:-1.4px;margin:4px 0 5px;line-height:1.05}.sub{color:var(--muted);font-size:15px;margin-bottom:20px}
-.card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.between{display:flex;justify-content:space-between;gap:10px;align-items:center}
 button,input,select{font:inherit}button{border:0;border-radius:13px;padding:11px 14px;background:var(--accent);color:white;font-weight:800;cursor:pointer}button.secondary{background:var(--chip);color:var(--text);border:1px solid var(--line)}button.danger{background:color-mix(in srgb,var(--bad) 12%,var(--card));color:var(--bad);border:1px solid color-mix(in srgb,var(--bad) 35%,var(--line))}
 input,select{width:100%;background:var(--field);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:13px;outline:none}input:focus,select:focus{border-color:color-mix(in srgb,var(--accent) 55%,var(--line));box-shadow:0 0 0 3px var(--accent-soft)}label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px;font-weight:650}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid5{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{background:var(--card);padding:14px;border-radius:18px;border:1px solid var(--line);box-shadow:var(--shadow)}.metric .name{font-size:14px;color:var(--text);font-weight:800}.metric .value{font-size:19px;font-weight:900;margin-top:4px}.metric .remain{font-size:11px;color:var(--muted);margin-top:3px}.bar{height:8px;background:var(--ring-track);border-radius:99px;overflow:hidden;margin-top:10px}.fill{height:100%;width:0;background:var(--accent);border-radius:99px}.fill.low{background:var(--bad)}.fill.mid{background:var(--warn)}.fill.ok{background:var(--accent)}.fill.over{background:var(--orange)}
-.kcal-hero{display:grid;grid-template-columns:118px 1fr;gap:18px;align-items:center;padding:18px}.kcal-ring{--pct:0;--ring:var(--accent);width:108px;height:108px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--ring) calc(var(--pct)*1%),#e9eef1 0);position:relative}.kcal-ring::after{content:"";position:absolute;inset:10px;background:var(--card);border-radius:50%}.kcal-ring>div{position:relative;z-index:1;text-align:center}.kcal-ring b{font-size:26px;display:block}.kcal-ring span{font-size:11px;color:var(--muted)}.kcal-label{font-size:14px;color:var(--muted);font-weight:700}.kcal-value{font-size:30px;font-weight:900;letter-spacing:-1px;margin-top:3px}.kcal-remain{font-size:17px;color:var(--muted);margin-top:4px}.kcal-remain b{color:#44515e}
+.kcal-hero{display:grid;grid-template-columns:118px 1fr;gap:18px;align-items:center;padding:18px}.kcal-ring{--pct:0;--ring:var(--accent);width:108px;height:108px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--ring) calc(var(--pct)*1%),var(--ring-track) 0);position:relative}.kcal-ring::after{content:"";position:absolute;inset:10px;background:var(--card);border-radius:50%}.kcal-ring>div{position:relative;z-index:1;text-align:center}.kcal-ring b{font-size:26px;display:block}.kcal-ring span{font-size:11px;color:var(--muted)}.kcal-label{font-size:14px;color:var(--muted);font-weight:700}.kcal-value{font-size:30px;font-weight:900;letter-spacing:-1px;margin-top:3px}.kcal-remain{font-size:17px;color:var(--muted);margin-top:4px}.kcal-remain b{color:var(--text)}
 .section-title{font-size:17px;font-weight:900;margin:0 0 12px;letter-spacing:-.2px}.small{font-size:12px}.muted{color:var(--muted)}.hidden{display:none!important}
 .food{display:grid;grid-template-columns:1fr auto;gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}.food:last-child{border-bottom:0}.food .meta{font-size:12px;color:var(--muted);margin-top:3px}.food .kcal{font-weight:900}.pill{display:inline-block;background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:8px 10px;font-size:12px}.avg{display:grid;grid-template-columns:1fr auto;gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}
 .quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.quick{background:var(--card2);color:var(--text);border:1px solid var(--line);padding:12px 8px}.quick b{display:block;font-size:13px}.quick span{font-size:11px;color:var(--muted)}
-.search-results{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}.search-chip{background:var(--accent-soft);color:#0d8650;border:1px solid #cfeedd;padding:8px 10px;font-weight:700}
-.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--tab-bg);backdrop-filter:blur(18px);border-top:1px solid var(--line);z-index:15}.tabs .inner{max-width:720px;margin:auto;display:grid;grid-template-columns:repeat(6,1fr);padding:7px 6px calc(8px + env(safe-area-inset-bottom));gap:4px}.tabs button{background:transparent;color:#71808e;padding:9px 2px 7px;border-radius:16px;font-size:11px;line-height:1.1}.tabs button::before{display:block;font-size:21px;line-height:1;margin-bottom:5px}.tabs #tabToday::before{content:'⌂'}.tabs #tabWeek::before{content:'▥'}.tabs #tabHistory::before{content:'◷'}.tabs #tabWeight::before{content:'▣'}.tabs #tabCalculator::before{content:'∑'}.tabs #tabSettings::before{content:'⚙'}.tabs button.active{color:#0a9d5a;background:var(--accent-soft)}
-.calendar-nav{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;margin-bottom:12px}.calendar-title{text-align:center;font-weight:900}.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.cal-head{text-align:center;color:var(--muted);font-size:11px;padding:5px 0}.cal-day{min-height:48px;padding:6px 3px;border-radius:12px;background:var(--card2);border:1px solid var(--line);color:var(--text);text-align:center;font-weight:800}.cal-day.empty{visibility:hidden}.cal-day.today{border-color:var(--accent)}.cal-day.hasdata::after{content:'•';display:block;color:var(--accent);font-size:14px;line-height:8px}.cal-day.selected{background:var(--accent);color:#fff}.history-row{padding:11px 0;border-bottom:1px solid var(--line)}.history-row:last-child{border-bottom:0}.history-stats{font-size:12px;color:var(--muted);margin-top:4px}.suggest-main{font-size:18px;font-weight:900;margin-bottom:6px}.suggest-option{padding:12px 0;border-bottom:1px solid var(--line)}.suggest-option:last-child{border-bottom:0}.suggest-foods{font-weight:800}.food-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:6px}.food-actions button{padding:7px 10px}.notice{background:#f8fafb;border:1px solid var(--line);border-radius:13px;padding:11px;font-size:13px}
+.search-results{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}.search-chip{background:var(--accent-soft);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 25%,var(--line));padding:8px 10px;font-weight:700}
+.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--tab-bg);backdrop-filter:blur(18px);border-top:1px solid var(--line);z-index:15}.tabs .inner{max-width:720px;margin:auto;display:grid;grid-template-columns:repeat(6,1fr);padding:7px 6px calc(8px + env(safe-area-inset-bottom));gap:4px}.tabs button{background:transparent;color:var(--muted);padding:9px 2px 7px;border-radius:16px;font-size:11px;line-height:1.1}.tabs button::before{display:block;font-size:21px;line-height:1;margin-bottom:5px}.tabs #tabToday::before{content:'⌂'}.tabs #tabWeek::before{content:'▥'}.tabs #tabHistory::before{content:'◷'}.tabs #tabWeight::before{content:'▣'}.tabs #tabCalculator::before{content:'∑'}.tabs #tabSettings::before{content:'⚙'}.tabs button.active{color:var(--accent);background:var(--accent-soft)}
+.calendar-nav{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;margin-bottom:12px}.calendar-title{text-align:center;font-weight:900}.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.cal-head{text-align:center;color:var(--muted);font-size:11px;padding:5px 0}.cal-day{min-height:48px;padding:6px 3px;border-radius:12px;background:var(--card2);border:1px solid var(--line);color:var(--text);text-align:center;font-weight:800}.cal-day.empty{visibility:hidden}.cal-day.today{border-color:var(--accent)}.cal-day.hasdata::after{content:'•';display:block;color:var(--accent);font-size:14px;line-height:8px}.cal-day.selected{background:var(--accent);color:#fff}.history-row{padding:11px 0;border-bottom:1px solid var(--line)}.history-row:last-child{border-bottom:0}.history-stats{font-size:12px;color:var(--muted);margin-top:4px}.suggest-main{font-size:18px;font-weight:900;margin-bottom:6px}.suggest-option{padding:12px 0;border-bottom:1px solid var(--line)}.suggest-option:last-child{border-bottom:0}.suggest-foods{font-weight:800}.food-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:6px}.food-actions button{padding:7px 10px}.notice{background:var(--card2);border:1px solid var(--line);border-radius:13px;padding:11px;font-size:13px}
 .weight-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.weight-trends{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}.weight-stat{background:var(--card2);border:1px solid var(--line);border-radius:15px;padding:12px}.weight-stat .v{font-size:20px;font-weight:900;margin-top:4px}.weight-chart-wrap{overflow-x:auto}#weightChart{width:100%;min-width:560px;height:260px;display:block;color:var(--accent)}.weight-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.weight-row:last-child{border-bottom:0}.weight-input-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;width:100%}.weight-field{min-width:0;width:100%}#weightDate,#weightValue{display:block;width:100%;min-width:0;max-width:100%;text-align:center;box-sizing:border-box}#weightDate{inline-size:100%;max-inline-size:100%;min-inline-size:0}#weightDate::-webkit-date-and-time-value{text-align:center}#weightDate::-webkit-datetime-edit{display:block;text-align:center;width:100%}
-.scanbox{border:1px dashed #ccd5dc;border-radius:14px;padding:12px;margin-top:12px}.modal.hidden{display:none!important}.modal{position:fixed;inset:0;background:rgba(12,20,28,.46);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:12px}.sheet{width:min(720px,100%);max-height:90vh;overflow:auto;background:var(--sheet);border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:0 -10px 50px rgba(20,35,45,.15)}.status{font-size:13px;color:var(--muted);margin-top:10px}
-.today-heading{display:flex;justify-content:space-between;align-items:end;gap:10px;margin-bottom:14px}.date-pill{display:flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:10px 14px;font-size:12px;color:var(--text);font-weight:800;box-shadow:0 3px 12px rgba(30,50,65,.04)}.date-picker button{border:0;background:transparent;color:inherit;padding:2px 5px;font-size:18px;line-height:1;cursor:pointer}.date-picker .date-main{font-size:12px;font-weight:800;padding:2px 5px}.date-picker button:active{transform:scale(.92)}
+.scanbox{border:1px dashed var(--line);border-radius:14px;padding:12px;margin-top:12px}.modal.hidden{display:none!important}.modal{position:fixed;inset:0;background:rgba(12,20,28,.46);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:12px}.sheet{width:min(720px,100%);max-height:90vh;overflow:auto;background:var(--sheet);border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:0 -10px 50px rgba(20,35,45,.15)}.status{font-size:13px;color:var(--muted);margin-top:10px}
+.today-heading{display:flex;justify-content:space-between;align-items:end;gap:10px;margin-bottom:14px}.date-pill{display:flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:10px 14px;font-size:12px;color:var(--text);font-weight:800;box-shadow:var(--shadow)}.date-picker button{border:0;background:transparent;color:inherit;padding:2px 5px;font-size:18px;line-height:1;cursor:pointer}.date-picker .date-main{font-size:12px;font-weight:800;padding:2px 5px}.date-picker button:active{transform:scale(.92)}
 
 .theme-options{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.theme-btn{background:var(--chip);color:var(--text);border:1px solid var(--line)}.theme-btn.active{background:var(--accent-soft);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
 .calc-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.calc-result-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.calc-result{padding:15px;border-radius:18px;background:var(--card2);border:1px solid var(--line)}.calc-result .label{font-size:12px;color:var(--muted);font-weight:700}.calc-result .big{font-size:25px;font-weight:900;margin-top:4px;letter-spacing:-.6px}.formula-note{font-size:12px;color:var(--muted);line-height:1.45;margin-top:10px}.bmi-scale{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:12px}.bmi-seg{height:7px;border-radius:99px;background:var(--line)}.bmi-seg.active{background:var(--accent)}
 html[data-theme="dark"] .version-badge{background:var(--chip);color:var(--muted)}
+html[data-theme="dark"] body{background:linear-gradient(180deg,var(--bg) 0,var(--card2) 420px,var(--bg) 100%)}
+html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{background:var(--field);color:var(--text);border-color:var(--line)}
+html[data-theme="dark"] .kcal-ring{background:conic-gradient(var(--ring) calc(var(--pct)*1%),var(--ring-track) 0)}
+html[data-theme="dark"] .search-chip{border-color:color-mix(in srgb,var(--accent) 30%,var(--line))}
+html[data-theme="dark"] .modal{background:rgba(0,0,0,.72)}
 html[data-theme="dark"] .notice{background:var(--card2)}
 @media(max-width:600px){.grid2{grid-template-columns:1fr}.weight-input-grid{grid-template-columns:minmax(0,1fr)}.quick-grid{grid-template-columns:1fr 1fr}.weight-trends{grid-template-columns:1fr}.weight-summary{grid-template-columns:1fr 1fr}.weight-summary .weight-stat:last-child{grid-column:1/-1}.kcal-hero{grid-template-columns:102px 1fr;gap:14px;padding:15px}.kcal-ring{width:94px;height:94px}.kcal-value{font-size:26px}.today-heading{align-items:center}.date-pill{padding:9px 12px}.brand{font-size:31px}.tabs button{font-size:10px}.calc-result-grid{grid-template-columns:1fr 1fr}}
 </style>
@@ -61,7 +66,7 @@ html[data-theme="dark"] .notice{background:var(--card2)}
 <div class="app">
   <div id="todayView">
     <div class="brand-row">
-      <div><div class="brand">Gruntins<span>FIT</span><span class="version-badge">v8.3</span></div><div class="brand-sub">Labāka versija Tev</div></div>
+      <div><div class="brand">Gruntins<span>FIT</span><span class="version-badge">v8.5</span></div><div class="brand-sub">Labāka versija Tev</div></div>
       <button class="secondary small" onclick="resetToday()">Jauna diena</button>
     </div>
     <div class="today-heading">
@@ -251,15 +256,16 @@ html[data-theme="dark"] .notice{background:var(--card2)}
 
     <div class="card">
       <div class="section-title">🌗 Tēma</div>
-      <div class="theme-options">
+      <div class="theme-options" style="grid-template-columns:repeat(4,1fr)">
+        <button id="themeSchedule" class="theme-btn" onclick="setThemePreference('schedule')">00–08 tumšā</button>
         <button id="themeSystem" class="theme-btn" onclick="setThemePreference('system')">Sistēma</button>
         <button id="themeLight" class="theme-btn" onclick="setThemePreference('light')">Gaišā</button>
         <button id="themeDark" class="theme-btn" onclick="setThemePreference('dark')">Tumšā</button>
       </div>
-      <div class="small muted" style="margin-top:10px">Sistēmas režīms automātiski seko iPhone Light/Dark iestatījumam.</div>
+      <div class="small muted" style="margin-top:10px">Automātiskais režīms: no 00:00 līdz 08:00 tumšā, no 08:00 līdz 00:00 gaišā. Vari jebkurā laikā izvēlēties citu režīmu.</div>
     </div>
     <div class="card">
-      <div class="between"><div class="section-title">Dati un rezerves kopija</div><span class="version-badge">GruntinsFIT v8.2</span></div>
+      <div class="between"><div class="section-title">Dati un rezerves kopija</div><span class="version-badge">MACROFIT v8.5</span></div>
       <div class="row">
         <button class="secondary" onclick="exportBackup()">⬇️ Eksportēt backup</button>
         <button class="secondary" onclick="document.getElementById('backupFile').click()">⬆️ Importēt backup</button>
@@ -369,19 +375,19 @@ html[data-theme="dark"] .notice{background:var(--card2)}
 </div>
 
 <script>
-const APP_VERSION='8.2';
+const APP_VERSION='8.5';
 const defaultTargets={kcal:2100,p:156,f:47,c:263,fi:30};
 const baseFoods=[
   {id:'buckwheat',name:'Griķi (sausi)',kcal:343.2,p:13.28,f:3.44,c:71.52,fi:10},
   {id:'rice',name:'Rīsi (sausi)',kcal:348.8,p:7.2,f:1.28,c:76.48,fi:1.28},
   {id:'ricecakes',name:'Rīsu galetes',kcal:393,p:9.55,f:4.18,c:79,fi:3.64},
-  {id:'b05',name:'B 0.5%',kcal:92,p:20,f:0.5,c:2,fi:0},
+  {id:'b05',name:'Biezpiens 0.5%',kcal:92,p:20,f:0.5,c:2,fi:0},
   {id:'sweetcurd',name:'Saldais biezpiens',kcal:189,p:6.9,f:6.9,c:25,fi:0},
   {id:'egg',name:'Vārīta ola (1 gab. ≈ 50 g)',kcal:140,p:12,f:10,c:1,fi:0},
   {id:'eggwhite',name:'Olas baltums (1 gab. ≈ 33 g)',kcal:51.5,p:10.9,f:0,c:0.76,fi:0},
   {id:'banana',name:'Banāns',kcal:89,p:1.1,f:0.3,c:22.8,fi:2.6},
   {id:'honey',name:'Medus',kcal:304,p:0,f:0,c:82,fi:0},
-  {id:'vg',name:'VG',kcal:220,p:23,f:13.55,c:2,fi:0},
+  {id:'vg',name:'Vistas giross - “Nākotne”',kcal:220,p:23,f:13.55,c:2,fi:0},
   {id:'chicken',name:'Vistas fileja cepta',kcal:165,p:31,f:3.6,c:0,fi:0},
   {id:'beef',name:'Liellopa maltā gaļa',kcal:199,p:17,f:14.5,c:0,fi:0},
   {id:'steak',name:'Bostonas steiks',kcal:169,p:18,f:15,c:1.7,fi:0},
@@ -390,7 +396,7 @@ const baseFoods=[
   {id:'buttermilk',name:'Annele paniņas',kcal:58,p:3,f:0.4,c:9.6,fi:0}
 ];
 
-// ===== GruntinsFIT v7: droša datu apstrāde / XSS aizsardzība =====
+// ===== MACROFIT v7: droša datu apstrāde / XSS aizsardzība =====
 function escapeHTML(value){
   return String(value ?? '').replace(/[&<>"']/g,ch=>({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -559,18 +565,18 @@ function appStorageKeys(){
   return Object.keys(localStorage).filter(k=>['targets','customFoods','favorites','weight_entries',RECENT_KEY,'theme_preference','calculator_settings'].includes(k)||/^day_\d{4}-\d{2}-\d{2}$/.test(k));
 }
 function exportBackup(){
-  const data={app:'GruntinsFIT',version:APP_VERSION,exportedAt:new Date().toISOString(),storage:{}};
+  const data={app:'MACROFIT',version:APP_VERSION,exportedAt:new Date().toISOString(),storage:{}};
   appStorageKeys().forEach(k=>data.storage[k]=localStorage.getItem(k));
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`GruntinsFIT_backup_${keyDate()}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`MACROFIT_backup_${keyDate()}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   const s=document.getElementById('backupStatus');if(s)s.textContent='Backup fails izveidots.';
 }
 async function importBackup(event){
   const file=event.target.files?.[0];if(!file)return;
   try{
     const parsed=JSON.parse(await file.text());
-    if(parsed?.app!=='GruntinsFIT'||!parsed.storage||typeof parsed.storage!=='object')throw new Error('Fails nav GruntinsFIT backup.');
-    if(!confirm('Importēt backup? Pašreizējie GruntinsFIT dati tiks aizvietoti ar backup saturu.')){event.target.value='';return;}
+    if(!['MACROFIT','GruntinsFIT'].includes(parsed?.app)||!parsed.storage||typeof parsed.storage!=='object')throw new Error('Fails nav MACROFIT backup.');
+    if(!confirm('Importēt backup? Pašreizējie MACROFIT dati tiks aizvietoti ar backup saturu.')){event.target.value='';return;}
     appStorageKeys().forEach(k=>localStorage.removeItem(k));
     for(const [k,v] of Object.entries(parsed.storage)){
       if(['targets','customFoods','favorites','weight_entries',RECENT_KEY,'theme_preference','calculator_settings'].includes(k)||/^day_\d{4}-\d{2}-\d{2}$/.test(k)){if(typeof v==='string')localStorage.setItem(k,v)}
@@ -582,7 +588,7 @@ function clearAll(){if(confirm('Tiešām dzēst VISUS aplikācijas datus?')){loc
 
 
 
-// ===== GruntinsFIT: svara uzskaite =====
+// ===== MACROFIT: svara uzskaite =====
 function getWeights(){
   const x=safeJson(localStorage.getItem('weight_entries')||'[]',[]);
   if(!Array.isArray(x))return [];
@@ -971,7 +977,7 @@ function recentAdd(i){
 }
 
 const defaultFavorites=[
-  {id:'b05',g:180,label:'B 0.5%'},
+  {id:'b05',g:180,label:'Biezpiens 0.5%'},
   {id:'buckwheat',g:125,label:'Griķi'},
   {id:'rice',g:125,label:'Rīsi'},
   {id:'egg',g:250,label:'5 olas'},
@@ -1111,30 +1117,53 @@ render=function(){oldRender();renderQuick();renderRecent()};
 
 
 
-// ===== GruntinsFIT v8.2: tēmas =====
+// ===== MACROFIT v8.2: tēmas =====
 const THEME_KEY='theme_preference';
 const systemDarkQuery=window.matchMedia('(prefers-color-scheme: dark)');
 function getThemePreference(){
-  const v=localStorage.getItem(THEME_KEY);return ['light','dark','system'].includes(v)?v:'system';
+  const v=localStorage.getItem(THEME_KEY);return ['light','dark','system','schedule'].includes(v)?v:'schedule';
 }
-function resolvedTheme(){const p=getThemePreference();return p==='system'?(systemDarkQuery.matches?'dark':'light'):p}
+function scheduledTheme(){
+  const h=new Date().getHours();
+  return (h>=0 && h<8)?'dark':'light';
+}
+function resolvedTheme(){
+  const p=getThemePreference();
+  if(p==='schedule')return scheduledTheme();
+  return p==='system'?(systemDarkQuery.matches?'dark':'light'):p;
+}
 function applyTheme(){
   const theme=resolvedTheme();
   document.documentElement.dataset.theme=theme;
   const meta=document.getElementById('themeColorMeta');if(meta)meta.content=theme==='dark'?'#0d1217':'#f5f7f9';
+  const appleMeta=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');if(appleMeta)appleMeta.content=theme==='dark'?'black':'default';
   renderThemeButtons();
 }
 function setThemePreference(value){
-  if(!['light','dark','system'].includes(value))return;
+  if(!['light','dark','system','schedule'].includes(value))return;
   localStorage.setItem(THEME_KEY,value);applyTheme();
 }
 function renderThemeButtons(){
   const p=getThemePreference();
-  [['themeSystem','system'],['themeLight','light'],['themeDark','dark']].forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',p===v)});
+  [['themeSchedule','schedule'],['themeSystem','system'],['themeLight','light'],['themeDark','dark']].forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',p===v)});
 }
 systemDarkQuery.addEventListener?.('change',()=>{if(getThemePreference()==='system')applyTheme()});
 
-// ===== GruntinsFIT v8.2: kaloriju / makro / BMI kalkulators =====
+// Automātiski pārbauda tēmu; grafiks pārslēdzas 00:00 un 08:00.
+setInterval(()=>{if(getThemePreference()==='schedule')applyTheme()},30000);
+
+// Vienreizēja veco saīsinājumu migrācija jau saglabātajos datos.
+function migrateFoodNames(){
+  const replaceName=(v)=>v==='VG'?'Vistas giross - “Nākotne”':v==='B 0.5%'?'Biezpiens 0.5%':v;
+  const dayKeys=Object.keys(localStorage).filter(k=>/^day_\d{4}-\d{2}-\d{2}$/.test(k));
+  dayKeys.forEach(k=>{const arr=safeJson(localStorage.getItem(k)||'[]',[]);if(!Array.isArray(arr))return;let changed=false;const next=arr.map(x=>{if(x&&typeof x==='object'){const n=replaceName(x.name);if(n!==x.name){changed=true;return {...x,name:n}}}return x});if(changed)localStorage.setItem(k,JSON.stringify(next));});
+  const fav=safeJson(localStorage.getItem('favorites')||'null',null);
+  if(Array.isArray(fav)){let changed=false;const next=fav.map(x=>{if(!x||typeof x!=='object')return x;const n=replaceName(x.label);if(n!==x.label){changed=true;return {...x,label:n}}return x});if(changed)localStorage.setItem('favorites',JSON.stringify(next));}
+  const custom=safeJson(localStorage.getItem('customFoods')||'[]',[]);
+  if(Array.isArray(custom)){let changed=false;const next=custom.map(x=>{if(!x||typeof x!=='object')return x;const n=replaceName(x.name);if(n!==x.name){changed=true;return {...x,name:n}}return x});if(changed)localStorage.setItem('customFoods',JSON.stringify(next));}
+}
+
+// ===== MACROFIT v8.2: kaloriju / makro / BMI kalkulators =====
 const CALC_KEY='calculator_settings';
 function getCalculatorSettings(){
   const x=safeJson(localStorage.getItem(CALC_KEY)||'{}',{});
@@ -1201,6 +1230,7 @@ function applyCalculatedTargets(){
   render();
 }
 
+migrateFoodNames();
 applyTheme();
 // Automātiski pārslēdzam pirmo lapu uz jaunu dienu pēc pusnakts (vietējais laiks).
 setInterval(ensureCurrentDay, 30000);
