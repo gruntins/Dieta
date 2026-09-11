@@ -1,5 +1,5 @@
-const CACHE='macrofit-v8-6';
-const CORE=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
+const CACHE='macrofit-v8-7';
+const CORE=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./logo-black.png'];
 
 self.addEventListener('install',e=>{
   self.skipWaiting();
