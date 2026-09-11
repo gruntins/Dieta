@@ -1,4 +1,4 @@
-const CACHE='macrofit-v8-5';
+const CACHE='macrofit-v8-6';
 const CORE=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install',e=>{

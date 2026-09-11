@@ -1,4 +1,4 @@
-MACROFIT v8.5
+MACROFIT v8.6
 
 Jaunumi:
 - Light / Dark / System tēmas izvēle Iestatījumos.
